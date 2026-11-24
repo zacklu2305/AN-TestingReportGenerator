@@ -1,0 +1,6 @@
+{
+  "name": "Testing Report",
+  "description": "Mobile-friendly laboratory testing report application for recording test results, color measurements, and inspection photos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
