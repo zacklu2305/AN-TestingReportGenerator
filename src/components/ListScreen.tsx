@@ -12,12 +12,13 @@ import {
 } from 'lucide-react';
 import {
   ENABLE_BATCH,
+  ENABLE_FORMAT_CHOICE,
   ENABLE_NEW_LIST,
   apiBuildReport,
   apiList,
   getForgetfulInputAttrs,
 } from '../api';
-import type { ReportListRow } from '../types';
+import type { BuildReportFormat, ReportListRow } from '../types';
 import { base64ToBlob, downloadBlob } from '../utils/imageProcessing';
 import { ErrorBanner } from './ErrorBanner';
 
@@ -30,6 +31,13 @@ const SEARCH_ROW_LIMIT = 50;
 const MAX_BATCH_REPORTS = 10;
 const DOCX_MIME =
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const PDF_MIME = 'application/pdf';
+
+const FORMAT_OPTIONS: { value: BuildReportFormat; label: string }[] = [
+  { value: 'docx', label: 'Word (.docx)' },
+  { value: 'pdf', label: 'PDF (.pdf)' },
+  { value: 'both', label: 'Both (.docx + .pdf)' },
+];
 
 interface JSZipInstance {
   file: (name: string, data: Blob) => void;
@@ -149,6 +157,42 @@ function makeUniqueFileName(rawName: string, usedNames: Set<string>): string {
   return candidate;
 }
 
+interface BuiltDownloadFile {
+  fileName: string;
+  blob: Blob;
+}
+
+function validateBuiltFile(
+  file: { fileName?: string; mime?: string; data?: string } | undefined,
+  expectedExt: '.docx' | '.pdf',
+  fallbackMime: string
+): BuiltDownloadFile | null {
+  if (!file || typeof file.data !== 'string' || !file.data) return null;
+  const trimmedName =
+    typeof file.fileName === 'string' ? file.fileName.trim() : '';
+  if (!trimmedName || !trimmedName.toLowerCase().endsWith(expectedExt)) {
+    return null;
+  }
+  try {
+    const blob = base64ToBlob(file.data, file.mime || fallbackMime);
+    return { fileName: trimmedName, blob };
+  } catch {
+    return null;
+  }
+}
+
+function alignMatchingPdfName(
+  docxFile: BuiltDownloadFile,
+  pdfFile: BuiltDownloadFile
+): BuiltDownloadFile {
+  const docxBase = docxFile.fileName.slice(0, -5);
+  const pdfBase = pdfFile.fileName.slice(0, -4);
+  if (docxBase && docxBase !== pdfBase) {
+    return { ...pdfFile, fileName: `${docxBase}.pdf` };
+  }
+  return pdfFile;
+}
+
 export function ListScreen({
   session,
   onSelectReport,
@@ -165,11 +209,19 @@ export function ListScreen({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [maxLimitNotice, setMaxLimitNotice] = useState(false);
   const [batchProgress, setBatchProgress] = useState<string | null>(null);
+  const [formatModalOpen, setFormatModalOpen] = useState(false);
+  const [selectedFormat, setSelectedFormat] =
+    useState<BuildReportFormat>('docx');
 
   const requestCounterRef = useRef(0);
   const isFirstRunRef = useRef(true);
   const sessionRef = useRef(session);
   sessionRef.current = session;
+  const selectedFormatRef = useRef<BuildReportFormat>(selectedFormat);
+  selectedFormatRef.current = selectedFormat;
+  const batchDownloadRef = useRef<(fmt: BuildReportFormat) => Promise<void>>(
+    async () => {}
+  );
 
   const fetchList = useCallback(async (searchText: string) => {
     const reqId = ++requestCounterRef.current;
@@ -262,31 +314,144 @@ export function ListScreen({
     });
   }
 
-  async function handleBatchDownload() {
+  function handleDownloadSelectedClick() {
+    if (isBatchWorking || selectedIds.length === 0) return;
+    if (!ENABLE_FORMAT_CHOICE) {
+      void handleBatchDownload('docx');
+      return;
+    }
+    setSelectedFormat('docx');
+    setFormatModalOpen(true);
+  }
+
+  function handleConfirmFormatModal() {
+    const chosen = selectedFormatRef.current;
+    setFormatModalOpen(false);
+    void handleBatchDownload(chosen);
+  }
+
+  async function handleBatchDownload(format: BuildReportFormat = 'docx') {
     if (isBatchWorking || selectedIds.length === 0) return;
     const targets = [...selectedIds];
     const total = targets.length;
     setError(null);
     setMaxLimitNotice(false);
 
-    const succeeded: { fileName: string; blob: Blob }[] = [];
+    const succeeded: BuiltDownloadFile[] = [];
     const failed: string[] = [];
 
     try {
       for (let i = 0; i < total; i++) {
         const reportNo = targets[i];
-        setBatchProgress(`Report ${i + 1} of ${total}...`);
-        try {
-          const res = await apiBuildReport(sessionRef.current, reportNo, 'docx');
-          if (!res.data) {
-            throw new Error('Missing file data');
+
+        if (!ENABLE_FORMAT_CHOICE) {
+          setBatchProgress(`Report ${i + 1} of ${total}...`);
+          try {
+            const res = await apiBuildReport(sessionRef.current, reportNo, 'docx');
+            if (!res.data) {
+              throw new Error('Missing file data');
+            }
+            const mime = res.mime || DOCX_MIME;
+            const fileName = res.fileName || `${reportNo}.docx`;
+            const blob = base64ToBlob(res.data, mime);
+            succeeded.push({ fileName, blob });
+          } catch {
+            failed.push(reportNo);
           }
-          const mime = res.mime || DOCX_MIME;
-          const fileName = res.fileName || `${reportNo}.docx`;
-          const blob = base64ToBlob(res.data, mime);
-          succeeded.push({ fileName, blob });
-        } catch {
-          failed.push(reportNo);
+          continue;
+        }
+
+        setBatchProgress(`Building report ${i + 1} of ${total}...`);
+
+        if (format === 'docx') {
+          try {
+            const res = await apiBuildReport(sessionRef.current, reportNo, 'docx');
+            const docxFile = validateBuiltFile(res, '.docx', DOCX_MIME);
+            if (docxFile) {
+              succeeded.push(docxFile);
+            } else {
+              failed.push(`${reportNo} (Word)`);
+            }
+          } catch {
+            failed.push(`${reportNo} (Word)`);
+          }
+        } else if (format === 'pdf') {
+          try {
+            const res = await apiBuildReport(sessionRef.current, reportNo, 'pdf');
+            const pdfFile = validateBuiltFile(res, '.pdf', PDF_MIME);
+            if (pdfFile) {
+              succeeded.push(pdfFile);
+            } else {
+              failed.push(`${reportNo} (PDF)`);
+            }
+          } catch {
+            failed.push(`${reportNo} (PDF)`);
+          }
+        } else {
+          // format === 'both'
+          let initialDocx: BuiltDownloadFile | null = null;
+          let initialPdf: BuiltDownloadFile | null = null;
+          try {
+            const res = await apiBuildReport(sessionRef.current, reportNo, 'both');
+            initialDocx = validateBuiltFile(res, '.docx', DOCX_MIME);
+            initialPdf = validateBuiltFile(res.pdf, '.pdf', PDF_MIME);
+          } catch {
+            initialDocx = null;
+            initialPdf = null;
+          }
+
+          if (initialDocx && initialPdf) {
+            succeeded.push(
+              initialDocx,
+              alignMatchingPdfName(initialDocx, initialPdf)
+            );
+          } else {
+            // Fallback: try once more with two separate requests (docx then pdf)
+            let retryDocx: BuiltDownloadFile | null = null;
+            try {
+              const docxRes = await apiBuildReport(
+                sessionRef.current,
+                reportNo,
+                'docx'
+              );
+              retryDocx = validateBuiltFile(docxRes, '.docx', DOCX_MIME);
+            } catch {
+              retryDocx = null;
+            }
+
+            let retryPdf: BuiltDownloadFile | null = null;
+            try {
+              const pdfRes = await apiBuildReport(
+                sessionRef.current,
+                reportNo,
+                'pdf'
+              );
+              retryPdf = validateBuiltFile(pdfRes, '.pdf', PDF_MIME);
+            } catch {
+              retryPdf = null;
+            }
+
+            const finalDocx = retryDocx ?? initialDocx;
+            const finalPdf = retryPdf ?? initialPdf;
+
+            if (finalDocx && finalPdf) {
+              succeeded.push(
+                finalDocx,
+                alignMatchingPdfName(finalDocx, finalPdf)
+              );
+            } else {
+              if (finalDocx) {
+                succeeded.push(finalDocx);
+              } else {
+                failed.push(`${reportNo} (Word)`);
+              }
+              if (finalPdf) {
+                succeeded.push(finalPdf);
+              } else {
+                failed.push(`${reportNo} (PDF)`);
+              }
+            }
+          }
         }
       }
 
@@ -323,7 +488,13 @@ export function ListScreen({
       }
 
       if (failed.length > 0) {
-        setError(`Failed to download: ${failed.join(', ')}`);
+        if (!ENABLE_FORMAT_CHOICE) {
+          setError(`Failed to download: ${failed.join(', ')}`);
+        } else {
+          const fileCountLabel =
+            failed.length === 1 ? '1 file' : `${failed.length} files`;
+          setError(`${fileCountLabel} could not be built: ${failed.join(', ')}`);
+        }
       }
 
       if (succeeded.length > 0) {
@@ -334,6 +505,33 @@ export function ListScreen({
       setBatchProgress(null);
     }
   }
+
+  batchDownloadRef.current = handleBatchDownload;
+
+  useEffect(() => {
+    if (!ENABLE_FORMAT_CHOICE || !formatModalOpen) return;
+
+    function handleModalKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setFormatModalOpen(false);
+        return;
+      }
+      if (e.key === 'Enter') {
+        const target = e.target as HTMLElement | null;
+        if (target?.dataset.formatCancel === 'true') {
+          return;
+        }
+        e.preventDefault();
+        const chosen = selectedFormatRef.current;
+        setFormatModalOpen(false);
+        void batchDownloadRef.current(chosen);
+      }
+    }
+
+    window.addEventListener('keydown', handleModalKeyDown, true);
+    return () => window.removeEventListener('keydown', handleModalKeyDown, true);
+  }, [formatModalOpen]);
 
   // Fallback: previous list screen & previous header when ENABLE_NEW_LIST is false
   if (!ENABLE_NEW_LIST) {
@@ -777,7 +975,7 @@ export function ListScreen({
               </button>
               <button
                 type="button"
-                onClick={() => void handleBatchDownload()}
+                onClick={handleDownloadSelectedClick}
                 disabled={isBatchWorking || selectedIds.length === 0}
                 className="inline-flex min-h-[44px] items-center gap-1.5 rounded-2xl bg-[#1F3A8A] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#193073] active:bg-[#152861] disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap"
               >
@@ -791,6 +989,91 @@ export function ListScreen({
                     ? batchProgress
                     : `Download (${selectedIds.length})`}
                 </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Download Format Choice Pop-up */}
+      {ENABLE_BATCH && ENABLE_FORMAT_CHOICE && formatModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="download-format-title"
+          onClick={() => setFormatModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,23,42,0.5)]"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="glass-format-panel w-[92vw] max-w-[420px] p-[24px]"
+          >
+            <h2
+              id="download-format-title"
+              className="text-[18px] font-semibold leading-snug text-[#0F172A]"
+            >
+              Download format
+            </h2>
+            <p className="mt-1 text-[14px] text-[#475569]">
+              {selectedIds.length}{' '}
+              {selectedIds.length === 1 ? 'report' : 'reports'} selected
+            </p>
+
+            <div
+              role="radiogroup"
+              aria-labelledby="download-format-title"
+              className="mt-5 flex flex-col gap-[10px]"
+            >
+              {FORMAT_OPTIONS.map((option) => {
+                const isSelected = selectedFormat === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => setSelectedFormat(option.value)}
+                    className={`flex h-[56px] w-full items-center gap-3 rounded-[14px] border-[1.5px] px-4 text-left transition-colors focus-visible:outline-2 focus-visible:outline-[#1F3A8A] ${
+                      isSelected
+                        ? 'border-[#1F3A8A] bg-[rgba(31,58,138,0.10)]'
+                        : 'border-[rgba(15,23,42,0.12)] bg-[rgba(255,255,255,0.75)] hover:bg-[rgba(255,255,255,0.9)]'
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors ${
+                        isSelected
+                          ? 'border-[#1F3A8A] bg-white'
+                          : 'border-[rgba(15,23,42,0.28)] bg-white/80'
+                      }`}
+                    >
+                      {isSelected && (
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#1F3A8A]" />
+                      )}
+                    </span>
+                    <span className="text-[16px] font-medium text-[#0F172A]">
+                      {option.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                data-format-cancel="true"
+                onClick={() => setFormatModalOpen(false)}
+                className="flex h-[48px] items-center justify-center rounded-[14px] border border-[rgba(15,23,42,0.12)] bg-[rgba(255,255,255,0.75)] text-[15px] font-semibold text-[#0F172A] transition-colors hover:bg-[rgba(255,255,255,0.9)] active:bg-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmFormatModal}
+                className="flex h-[48px] items-center justify-center rounded-[14px] bg-[#1F3A8A] text-[15px] font-semibold text-white transition-colors hover:bg-[#193073] active:bg-[#152861]"
+              >
+                Download
               </button>
             </div>
           </div>

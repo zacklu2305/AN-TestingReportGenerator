@@ -147,8 +147,17 @@ export interface GetPhotoResponse extends BaseApiResponse {
   mime?: string;
 }
 
+export type BuildReportFormat = 'docx' | 'pdf' | 'both';
+
+export interface BuildReportPdfFile {
+  fileName?: string;
+  mime?: string;
+  data?: string;
+}
+
 export interface BuildReportResponse extends BaseApiResponse {
   fileName?: string;
   mime?: string;
   data?: string;
+  pdf?: BuildReportPdfFile;
 }

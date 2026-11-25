@@ -1,6 +1,7 @@
 import type {
   BaseApiResponse,
   BasicResponse,
+  BuildReportFormat,
   BuildReportResponse,
   GetPhotoResponse,
   ListResponse,
@@ -22,6 +23,7 @@ export const ENABLE_BATCH = true;
 export const ENABLE_SERVER_LOGOUT = true;
 export const ENABLE_SYSTEM_PDF = true;
 export const DISABLE_FIELD_MEMORY = true;
+export const ENABLE_FORMAT_CHOICE = true;
 
 export interface ForgetfulInputAttrs {
   id?: string;
@@ -404,7 +406,7 @@ export function apiGetPhoto(
 export function apiBuildReport(
   session: string,
   reportNo: string,
-  format: 'docx' | 'pdf'
+  format: BuildReportFormat = 'docx'
 ): Promise<BuildReportResponse> {
   return apiCall<BuildReportResponse>(session, 'build', { reportNo, format });
 }
