@@ -15,6 +15,7 @@ import {
   ENABLE_NEW_LIST,
   apiBuildReport,
   apiList,
+  getForgetfulInputAttrs,
 } from '../api';
 import type { ReportListRow } from '../types';
 import { base64ToBlob, downloadBlob } from '../utils/imageProcessing';
@@ -376,6 +377,7 @@ export function ListScreen({
                 aria-hidden="true"
               />
               <input
+                {...getForgetfulInputAttrs('list_q_alt')}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -536,6 +538,7 @@ export function ListScreen({
               aria-hidden="true"
             />
             <input
+              {...getForgetfulInputAttrs('list_q')}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

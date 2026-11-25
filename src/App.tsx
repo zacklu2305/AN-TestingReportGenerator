@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import {
+  DISABLE_FIELD_MEMORY,
   ENABLE_SERVER_LOGOUT,
   apiLogin,
   apiLogout,
@@ -157,6 +158,7 @@ export default function App() {
     <>
       {screen === 'report' && selectedReportNo && meta ? (
         <ReportScreen
+          key={DISABLE_FIELD_MEMORY ? selectedReportNo : undefined}
           session={session}
           meta={meta}
           reportNo={selectedReportNo}

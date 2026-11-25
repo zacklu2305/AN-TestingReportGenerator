@@ -1,8 +1,10 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Plus, X } from 'lucide-react';
+import { getForgetfulInputAttrs } from '../api';
 import type { BlockTableMeta, LabReading, LabTableData } from '../types';
 
 interface LabTableProps {
+  blockKey?: string;
   tableMeta: BlockTableMeta;
   data: LabTableData;
   onChange: (next: LabTableData) => void;
@@ -60,8 +62,9 @@ function formatSigned(val: number): string {
   return fixed;
 }
 
-export function LabTable({ tableMeta, data, onChange }: LabTableProps) {
+export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps) {
   const [newHourInput, setNewHourInput] = useState('');
+  const tableKeyPrefix = blockKey ? `tbl_${blockKey}` : 'tbl';
 
   const rows: LabReading[] = data.times.map(
     (_, idx) => data.rows[idx] ?? { L: '', a: '', b: '' }
@@ -157,6 +160,7 @@ export function LabTable({ tableMeta, data, onChange }: LabTableProps) {
 
         <div className="flex items-center gap-1.5">
           <input
+            {...getForgetfulInputAttrs(`${tableKeyPrefix}_add_hr`)}
             type="text"
             inputMode="decimal"
             value={newHourInput}
@@ -193,6 +197,7 @@ export function LabTable({ tableMeta, data, onChange }: LabTableProps) {
           <div className="grid grid-cols-[54px_1fr_1fr_1fr_62px] items-center gap-1.5 rounded-lg bg-gray-50 p-1.5">
             <div className="text-sm font-semibold text-gray-700 tabular-nums">0 hr</div>
             <input
+              {...getForgetfulInputAttrs(`${tableKeyPrefix}_base_l`)}
               type="text"
               inputMode="decimal"
               value={data.base.L}
@@ -202,6 +207,7 @@ export function LabTable({ tableMeta, data, onChange }: LabTableProps) {
               className="w-full min-w-0 min-h-[42px] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
             />
             <input
+              {...getForgetfulInputAttrs(`${tableKeyPrefix}_base_a`)}
               type="text"
               inputMode="decimal"
               value={data.base.a}
@@ -211,6 +217,7 @@ export function LabTable({ tableMeta, data, onChange }: LabTableProps) {
               className="w-full min-w-0 min-h-[42px] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
             />
             <input
+              {...getForgetfulInputAttrs(`${tableKeyPrefix}_base_b`)}
               type="text"
               inputMode="decimal"
               value={data.base.b}
@@ -241,6 +248,9 @@ export function LabTable({ tableMeta, data, onChange }: LabTableProps) {
                       {hr} hr
                     </div>
                     <input
+                      {...getForgetfulInputAttrs(
+                        `${tableKeyPrefix}_hr_${String(hr).replace('.', 'p')}_l`
+                      )}
                       type="text"
                       inputMode="decimal"
                       value={row.L}
@@ -250,6 +260,9 @@ export function LabTable({ tableMeta, data, onChange }: LabTableProps) {
                       className="w-full min-w-0 min-h-[42px] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
                     />
                     <input
+                      {...getForgetfulInputAttrs(
+                        `${tableKeyPrefix}_hr_${String(hr).replace('.', 'p')}_a`
+                      )}
                       type="text"
                       inputMode="decimal"
                       value={row.a}
@@ -259,6 +272,9 @@ export function LabTable({ tableMeta, data, onChange }: LabTableProps) {
                       className="w-full min-w-0 min-h-[42px] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
                     />
                     <input
+                      {...getForgetfulInputAttrs(
+                        `${tableKeyPrefix}_hr_${String(hr).replace('.', 'p')}_b`
+                      )}
                       type="text"
                       inputMode="decimal"
                       value={row.b}

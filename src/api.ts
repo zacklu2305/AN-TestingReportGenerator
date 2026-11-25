@@ -20,6 +20,65 @@ export const DISABLE_EMAIL_SUGGEST = true;
 export const ENABLE_NEW_LIST = true;
 export const ENABLE_BATCH = true;
 export const ENABLE_SERVER_LOGOUT = true;
+export const ENABLE_SYSTEM_PDF = true;
+export const DISABLE_FIELD_MEMORY = true;
+
+export interface ForgetfulInputAttrs {
+  id?: string;
+  name?: string;
+  autoComplete?: string;
+  autoCorrect?: string;
+  autoCapitalize?: string;
+  spellCheck?: boolean;
+  'aria-autocomplete'?: 'none';
+  'data-lpignore'?: string;
+  'data-1p-ignore'?: string;
+  'data-bwignore'?: string;
+  'data-form-type'?: string;
+}
+
+function sanitizeForgetfulKey(rawKey: string): string {
+  return rawKey
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/email/g, 'em')
+    .replace(/address/g, 'adr')
+    .replace(/phone/g, 'phn')
+    .replace(/search/g, 'q')
+    .replace(/name/g, 'lbl');
+}
+
+export function getForgetfulFieldId(
+  key: string,
+  fallbackId?: string
+): string | undefined {
+  if (!DISABLE_FIELD_MEMORY) return fallbackId;
+  return `tr_field_${sanitizeForgetfulKey(key)}`;
+}
+
+export function getForgetfulInputAttrs(
+  key: string,
+  fallbackId?: string
+): ForgetfulInputAttrs {
+  if (!DISABLE_FIELD_MEMORY) {
+    return fallbackId ? { id: fallbackId } : {};
+  }
+  const fieldId = `tr_field_${sanitizeForgetfulKey(key)}`;
+  return {
+    id: fieldId,
+    name: fieldId,
+    autoComplete: 'off',
+    autoCorrect: 'off',
+    autoCapitalize: 'none',
+    spellCheck: false,
+    'aria-autocomplete': 'none',
+    'data-lpignore': 'true',
+    'data-1p-ignore': 'true',
+    'data-bwignore': 'true',
+    'data-form-type': 'other',
+  };
+}
 
 export const SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbzXU808up-gq_TQzWJFqA8riOsAHV0ye_CF94N3kFZ0LhVA3-wo_h5514_-2Y7Txdm42w/exec';

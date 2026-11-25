@@ -8,10 +8,13 @@ import {
   Save,
 } from 'lucide-react';
 import {
+  DISABLE_FIELD_MEMORY,
   ENABLE_NEW_LIST,
   apiBuildReport,
   apiGetReport,
   apiSaveResults,
+  getForgetfulFieldId,
+  getForgetfulInputAttrs,
 } from '../api';
 import type {
   AppMeta,
@@ -264,6 +267,15 @@ export function ReportScreen({
     setSavedTime(null);
     setSavedSinceChange(false);
     setCustomTimedTables(new Set());
+    if (DISABLE_FIELD_MEMORY) {
+      setGeneral({});
+      setSuggest({});
+      setSize('');
+      setEnabledBlocks(new Set());
+      setValues({});
+      setTables({});
+      setPhotos([]);
+    }
 
     apiGetReport(sessionRef.current, reportNo)
       .then((res) => {
@@ -608,29 +620,34 @@ export function ReportScreen({
       <div className="mt-4 space-y-4">
         {fields.length > 0 && (
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            {fields.map(([fieldKey, label]) => (
-              <div key={fieldKey} className="space-y-1.5">
-                <label
-                  htmlFor={`field-${blockKey}-${fieldKey}`}
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  {label}
-                </label>
-                <input
-                  id={`field-${blockKey}-${fieldKey}`}
-                  type="text"
-                  value={values[fieldKey] ?? ''}
-                  onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
-                  placeholder={`Enter ${label.toLowerCase()}`}
-                  className="block w-full min-h-[44px] rounded-xl border border-gray-300 bg-white px-3.5 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20"
-                />
-              </div>
-            ))}
+            {fields.map(([fieldKey, label]) => {
+              const rawKey = `${blockKey}_${fieldKey}`;
+              const fallbackId = `field-${blockKey}-${fieldKey}`;
+              return (
+                <div key={fieldKey} className="space-y-1.5">
+                  <label
+                    htmlFor={getForgetfulFieldId(rawKey, fallbackId)}
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    {label}
+                  </label>
+                  <input
+                    {...getForgetfulInputAttrs(rawKey, fallbackId)}
+                    type="text"
+                    value={values[fieldKey] ?? ''}
+                    onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
+                    placeholder={`Enter ${label.toLowerCase()}`}
+                    className="block w-full min-h-[44px] rounded-xl border border-gray-300 bg-white px-3.5 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20"
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
 
         {block.table && (
           <LabTable
+            blockKey={blockKey}
             tableMeta={block.table}
             data={
               tables[blockKey] ??
@@ -797,13 +814,13 @@ export function ReportScreen({
                 <div className="mt-5 grid grid-cols-1 gap-4 border-t border-gray-200 pt-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <label
-                      htmlFor="report-size"
+                      htmlFor={getForgetfulFieldId('size', 'report-size')}
                       className="block text-sm font-medium text-gray-700"
                     >
                       Size (cm)
                     </label>
                     <input
-                      id="report-size"
+                      {...getForgetfulInputAttrs('size', 'report-size')}
                       type="text"
                       value={size}
                       onChange={(e) => {

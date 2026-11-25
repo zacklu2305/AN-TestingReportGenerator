@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import {
+  ENABLE_SYSTEM_PDF,
   apiDeletePhoto,
   apiGetPhoto,
   apiReorderPhotos,
@@ -30,8 +31,10 @@ import {
   normalizePhotoParams,
 } from '../utils/imageProcessing';
 import type { PhotoThumbnailQueue } from '../utils/photoQueue';
+import { isPdfFile } from '../utils/pdfToImages';
 import { ConfirmDialog } from './ConfirmDialog';
 import { PhotoEditorModal } from './PhotoEditorModal';
+import { SystemPdfCropModal } from './SystemPdfCropModal';
 
 const MAX_PHOTOS_PER_SLOT = 6;
 
@@ -85,6 +88,13 @@ export function PhotoSlotArea({
   const [loadingOriginal, setLoadingOriginal] = useState(false);
   const [busyAction, setBusyAction] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  // System sheet PDF upload flow state (slot === 'SYSTEM' & ENABLE_SYSTEM_PDF only)
+  const [pdfSession, setPdfSession] = useState<{
+    file: File;
+    remainingSlots: number;
+  } | null>(null);
+  const isSystemPdfEnabled = ENABLE_SYSTEM_PDF && slot === 'SYSTEM';
 
   // Sequentially load edited thumbnails via the shared 1-at-a-time queue
   useEffect(() => {
@@ -172,6 +182,17 @@ export function PhotoSlotArea({
       return;
     }
 
+    if (isSystemPdfEnabled) {
+      const pdfFile = picked.find(isPdfFile);
+      if (pdfFile) {
+        setPdfSession({
+          file: pdfFile,
+          remainingSlots,
+        });
+        return;
+      }
+    }
+
     const allowed = picked.slice(0, remainingSlots);
     if (picked.length > remainingSlots) {
       onError(
@@ -183,6 +204,59 @@ export function PhotoSlotArea({
     pendingTotalRef.current = allowed.length;
     pendingIndexRef.current = 0;
     void openNextPendingFile();
+  }
+
+  async function handleSaveSystemPdfPage(payload: {
+    originalBase64: string;
+    editedBase64: string;
+    editedDataUrl: string;
+    params: PhotoParams;
+  }): Promise<void> {
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    onUpdateSlotPhotos(slot, (prev) => [
+      ...prev,
+      {
+        id: tempId,
+        slot,
+        order: prev.length + 1,
+        params: payload.params,
+        uploading: true,
+        localPreviewUrl: payload.editedDataUrl,
+      },
+    ]);
+
+    try {
+      const res = await apiSavePhoto(session, {
+        reportNo,
+        slot,
+        original: payload.originalBase64,
+        edited: payload.editedBase64,
+        params: payload.params,
+      });
+      const realId = res.photoId;
+      if (!realId) {
+        throw new Error('Server did not return a photoId.');
+      }
+      photoQueue.setCached(realId, payload.editedDataUrl);
+      setThumbUrls((prev) => ({ ...prev, [realId]: payload.editedDataUrl }));
+      onUpdateSlotPhotos(slot, (prev) =>
+        prev.map((p) =>
+          p.id === tempId
+            ? {
+                id: realId,
+                slot,
+                order: p.order,
+                params: payload.params,
+                uploading: false,
+              }
+            : p
+        )
+      );
+    } catch (err) {
+      onUpdateSlotPhotos(slot, (prev) => prev.filter((p) => p.id !== tempId));
+      throw err;
+    }
   }
 
   function handleEditorCancel() {
@@ -450,7 +524,7 @@ export function PhotoSlotArea({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept={isSystemPdfEnabled ? 'image/*,application/pdf,.pdf' : 'image/*'}
           multiple
           onChange={handleFileInputChange}
           className="hidden"
@@ -463,7 +537,7 @@ export function PhotoSlotArea({
           className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[#1F3A8A]/30 bg-blue-50/70 px-3 py-1.5 text-sm font-medium text-[#1F3A8A] transition-colors hover:bg-blue-100/70 active:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-45 whitespace-nowrap"
         >
           <Camera className="h-4 w-4" aria-hidden="true" />
-          <span>Add photo</span>
+          <span>{isSystemPdfEnabled ? 'Upload image or PDF' : 'Add photo'}</span>
         </button>
       </div>
 
@@ -530,6 +604,16 @@ export function PhotoSlotArea({
           title={editorTitle}
           onCancel={handleEditorCancel}
           onSave={handleEditorSave}
+        />
+      )}
+
+      {/* System Sheet PDF Crop-Only Modal */}
+      {isSystemPdfEnabled && pdfSession && (
+        <SystemPdfCropModal
+          file={pdfSession.file}
+          remainingSlots={pdfSession.remainingSlots}
+          onSavePage={handleSaveSystemPdfPage}
+          onClose={() => setPdfSession(null)}
         />
       )}
 

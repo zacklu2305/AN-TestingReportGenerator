@@ -14,7 +14,11 @@ import {
   Type,
   Undo2,
 } from 'lucide-react';
-import { ENABLE_ANNOTATIONS } from '../api';
+import {
+  DISABLE_FIELD_MEMORY,
+  ENABLE_ANNOTATIONS,
+  getForgetfulInputAttrs,
+} from '../api';
 import type {
   ArrowAnnotation,
   CropRect,
@@ -1194,40 +1198,79 @@ export function PhotoEditorModal({
         {/* Inline text entry box when user taps canvas in Text tool */}
         {activeMode === 'annotate' && pendingText && (
           <div className="absolute bottom-3 left-3 right-3 z-20 mx-auto max-w-md rounded-xl border border-gray-700 bg-gray-900/95 p-2.5 shadow-xl backdrop-blur-sm">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleCommitPendingText();
-              }}
-              className="flex items-center gap-2"
-            >
-              <input
-                ref={textInputRef}
-                type="text"
-                value={pendingText.text}
-                onChange={(e) =>
-                  setPendingText((prev) =>
-                    prev ? { ...prev, text: e.target.value } : null
-                  )
-                }
-                placeholder="Type label text..."
-                className="min-w-0 flex-1 min-h-[42px] rounded-lg border border-gray-600 bg-gray-800 px-3 py-1.5 text-base text-white placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => setPendingText(null)}
-                className="min-h-[42px] rounded-lg bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 hover:bg-gray-700"
+            {DISABLE_FIELD_MEMORY ? (
+              <div className="flex items-center gap-2">
+                <input
+                  {...getForgetfulInputAttrs('ann_txt')}
+                  ref={textInputRef}
+                  type="text"
+                  value={pendingText.text}
+                  onChange={(e) =>
+                    setPendingText((prev) =>
+                      prev ? { ...prev, text: e.target.value } : null
+                    )
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleCommitPendingText();
+                    }
+                  }}
+                  placeholder="Type label text..."
+                  className="min-w-0 flex-1 min-h-[42px] rounded-lg border border-gray-600 bg-gray-800 px-3 py-1.5 text-base text-white placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPendingText(null)}
+                  className="min-h-[42px] rounded-lg bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCommitPendingText}
+                  disabled={!pendingText.text.trim()}
+                  className="min-h-[42px] rounded-lg bg-[#1F3A8A] px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-[#2749AA] disabled:opacity-50"
+                >
+                  Add
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleCommitPendingText();
+                }}
+                className="flex items-center gap-2"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!pendingText.text.trim()}
-                className="min-h-[42px] rounded-lg bg-[#1F3A8A] px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-[#2749AA] disabled:opacity-50"
-              >
-                Add
-              </button>
-            </form>
+                <input
+                  ref={textInputRef}
+                  type="text"
+                  value={pendingText.text}
+                  onChange={(e) =>
+                    setPendingText((prev) =>
+                      prev ? { ...prev, text: e.target.value } : null
+                    )
+                  }
+                  placeholder="Type label text..."
+                  className="min-w-0 flex-1 min-h-[42px] rounded-lg border border-gray-600 bg-gray-800 px-3 py-1.5 text-base text-white placeholder:text-gray-400 focus:border-blue-400 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPendingText(null)}
+                  className="min-h-[42px] rounded-lg bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!pendingText.text.trim()}
+                  className="min-h-[42px] rounded-lg bg-[#1F3A8A] px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-[#2749AA] disabled:opacity-50"
+                >
+                  Add
+                </button>
+              </form>
+            )}
           </div>
         )}
       </div>
