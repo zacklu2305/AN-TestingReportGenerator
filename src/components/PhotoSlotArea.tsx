@@ -512,11 +512,11 @@ export function PhotoSlotArea({
       : 'Edit photo';
 
   return (
-    <div className="space-y-3 border-t border-gray-200 pt-4">
+    <div className="space-y-3 border-t border-black/[0.06] pt-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="text-sm font-medium text-gray-700">
+        <div className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#86868b]">
           Photos{' '}
-          <span className="text-gray-400 tabular-nums">
+          <span className="font-mono-num">
             ({photos.length}/{MAX_PHOTOS_PER_SLOT})
           </span>
         </div>
@@ -534,9 +534,9 @@ export function PhotoSlotArea({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={remainingSlots <= 0}
-          className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[#1F3A8A]/30 bg-blue-50/70 px-3 py-1.5 text-sm font-medium text-[#1F3A8A] transition-colors hover:bg-blue-100/70 active:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-45 whitespace-nowrap"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#00227A]/45 bg-white/50 px-3.5 text-[12px] font-medium text-[#00227A] transition-colors hover:border-[#00227A] hover:bg-white/[0.82] disabled:cursor-not-allowed disabled:opacity-45 whitespace-nowrap"
         >
-          <Camera className="h-4 w-4" aria-hidden="true" />
+          <Camera className="h-3.5 w-3.5" aria-hidden="true" />
           <span>{isSystemPdfEnabled ? 'Upload image or PDF' : 'Add photo'}</span>
         </button>
       </div>
@@ -556,7 +556,7 @@ export function PhotoSlotArea({
                 type="button"
                 disabled={Boolean(photo.uploading)}
                 onClick={() => setPreviewPhotoId(photo.id)}
-                className="group relative aspect-square w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-100 focus-visible:outline-2 focus-visible:outline-[#1F3A8A] disabled:cursor-wait"
+                className="group relative aspect-square w-full overflow-hidden rounded-[12px] border border-black/[0.08] bg-white/60 focus-visible:outline-2 focus-visible:outline-[#00227A] disabled:cursor-wait"
                 aria-label={`View photo ${idx + 1}`}
               >
                 {imgSrc ? (
@@ -567,9 +567,9 @@ export function PhotoSlotArea({
                     className="h-full w-full object-cover transition-transform duration-150 group-hover:scale-[1.03]"
                   />
                 ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-gray-400">
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-[#86868b]">
                     {isLoadingThumb ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-[#1F3A8A]" />
+                      <Loader2 className="h-5 w-5 animate-spin text-[#00227A]" />
                     ) : (
                       <ImageIcon className="h-5 w-5" />
                     )}
@@ -585,7 +585,7 @@ export function PhotoSlotArea({
                   </div>
                 )}
 
-                <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[11px] font-medium text-white tabular-nums">
+                <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white font-mono-num">
                   {idx + 1}
                 </span>
               </button>
@@ -670,7 +670,7 @@ export function PhotoSlotArea({
                 type="button"
                 onClick={handleEditAgain}
                 disabled={loadingOriginal || busyAction}
-                className="flex min-h-[44px] items-center gap-1.5 rounded-lg bg-[#1F3A8A] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#2647A8] disabled:opacity-50 whitespace-nowrap"
+                className="glass-btn-primary flex h-10 items-center gap-1.5 px-4 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap"
               >
                 {loadingOriginal ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -684,7 +684,7 @@ export function PhotoSlotArea({
                 type="button"
                 onClick={() => handleMove(-1)}
                 disabled={previewIndex <= 0 || busyAction || loadingOriginal}
-                className="flex min-h-[44px] items-center gap-1.5 rounded-lg bg-gray-800 px-3.5 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-40 whitespace-nowrap"
+                className="flex h-10 items-center gap-1.5 rounded-full bg-white/15 px-4 text-[13px] font-medium text-white transition-colors hover:bg-white/25 disabled:opacity-40 whitespace-nowrap"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 <span>Move left</span>
@@ -696,7 +696,7 @@ export function PhotoSlotArea({
                 disabled={
                   previewIndex >= photos.length - 1 || busyAction || loadingOriginal
                 }
-                className="flex min-h-[44px] items-center gap-1.5 rounded-lg bg-gray-800 px-3.5 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-40 whitespace-nowrap"
+                className="flex h-10 items-center gap-1.5 rounded-full bg-white/15 px-4 text-[13px] font-medium text-white transition-colors hover:bg-white/25 disabled:opacity-40 whitespace-nowrap"
               >
                 <span>Move right</span>
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -706,7 +706,7 @@ export function PhotoSlotArea({
                 type="button"
                 onClick={() => setDeleteTargetId(previewPhoto.id)}
                 disabled={busyAction || loadingOriginal}
-                className="flex min-h-[44px] items-center gap-1.5 rounded-lg bg-red-600/90 px-3.5 py-2 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-50 whitespace-nowrap"
+                className="flex h-10 items-center gap-1.5 rounded-full bg-[#ff3b30] px-4 text-[13px] font-medium text-white shadow-[0_4px_12px_rgba(255,59,48,0.28)] transition-all hover:bg-[#e0352b] disabled:opacity-50 whitespace-nowrap"
               >
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                 <span>Delete</span>

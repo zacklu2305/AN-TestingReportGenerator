@@ -43,9 +43,6 @@ function clamp(val: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, val));
 }
 
-const LIQUID_GLASS_PANEL =
-  'bg-[rgba(255,255,255,0.22)] backdrop-blur-[20px] backdrop-saturate-[160%] border border-[rgba(255,255,255,0.45)] rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.18)]';
-
 export function SystemPdfCropModal({
   file,
   remainingSlots,
@@ -341,27 +338,20 @@ export function SystemPdfCropModal({
   if (phase === 'reading' || phase === 'read-error') {
     return (
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,23,42,0.6)] p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         role="dialog"
         aria-modal="true"
         aria-label="Reading PDF"
       >
-        <div
-          className={`w-full max-w-sm p-6 text-center ${LIQUID_GLASS_PANEL}`}
-        >
+        <div className="glass-panel w-full max-w-sm p-6 text-center">
           {phase === 'reading' ? (
             <div className="flex flex-col items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/85 shadow-sm">
-                <Loader2
-                  className="h-6 w-6 animate-spin text-[#1F3A8A]"
-                  aria-hidden="true"
-                />
-              </div>
-              <p className="text-base font-semibold text-white drop-shadow-xs">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#00227A]/25 border-t-[#00227A]" />
+              <p className="text-[15px] font-semibold text-[#1d1d1f]">
                 {progressText}
               </p>
               {notices.length > 0 && (
-                <div className="w-full rounded-xl bg-white/85 px-3 py-2 text-xs font-medium text-slate-800">
+                <div className="glass-inset w-full px-3.5 py-2 text-[12px] font-medium text-[#525257]">
                   {notices.map((n, idx) => (
                     <p key={idx}>{n}</p>
                   ))}
@@ -370,9 +360,9 @@ export function SystemPdfCropModal({
             </div>
           ) : (
             <div className="flex flex-col items-center gap-4">
-              <div className="flex w-full items-start gap-2.5 rounded-2xl border border-red-200 bg-red-50/95 px-4 py-3 text-left text-sm font-medium text-red-700">
+              <div className="flex w-full items-start gap-2.5 rounded-[14px] border border-[#ff3b30]/25 bg-[#ff3b30]/[0.09] px-3.5 py-2.5 text-left text-[13px] font-medium text-[#1d1d1f]">
                 <AlertCircle
-                  className="mt-0.5 h-5 w-5 shrink-0 text-red-600"
+                  className="mt-0.5 h-4 w-4 shrink-0 text-[#ff3b30]"
                   aria-hidden="true"
                 />
                 <span>{readErrorMessage}</span>
@@ -380,7 +370,7 @@ export function SystemPdfCropModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="h-12 w-full rounded-[14px] bg-[rgba(255,255,255,0.85)] px-4 text-[15px] font-semibold text-[#0F172A] shadow-xs transition-colors hover:bg-white"
+                className="glass-btn-secondary h-11 w-full px-5 text-[13px] font-medium"
               >
                 OK
               </button>
@@ -401,21 +391,19 @@ export function SystemPdfCropModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-[rgba(15,23,42,0.6)] p-3 sm:p-4"
+      className="fixed inset-0 z-50 flex flex-col bg-black/60 p-3 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={`Crop page ${pageIndex + 1} of ${totalPages}`}
     >
       {/* Top Liquid Glass Header */}
-      <div
-        className={`mx-auto flex w-full max-w-4xl shrink-0 items-center justify-between gap-3 px-4 py-2.5 ${LIQUID_GLASS_PANEL}`}
-      >
+      <div className="glass-panel mx-auto flex w-full max-w-4xl shrink-0 items-center justify-between gap-3 px-4 py-2.5">
         <div className="min-w-0">
-          <h2 className="truncate text-base font-semibold text-white drop-shadow-xs">
+          <h2 className="truncate text-[16px] font-semibold tracking-[-0.01em] text-[#1d1d1f]">
             Crop page {pageIndex + 1} of {totalPages}
           </h2>
           {notices.length > 0 && (
-            <p className="mt-0.5 truncate text-xs font-medium text-white/90">
+            <p className="mt-0.5 truncate text-[12px] font-medium text-[#525257]">
               {notices.join(' ')}
             </p>
           )}
@@ -428,9 +416,9 @@ export function SystemPdfCropModal({
           }}
           disabled={savingPage}
           aria-label="Close"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[rgba(255,255,255,0.75)] text-[#0F172A] transition-colors hover:bg-white disabled:opacity-50"
+          className="glass-pill flex h-10 w-10 shrink-0 items-center justify-center text-[#525257] hover:text-[#1d1d1f] disabled:opacity-50"
         >
-          <X className="h-5 w-5" aria-hidden="true" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
@@ -517,7 +505,7 @@ export function SystemPdfCropModal({
                 aria-label="Resize top-left corner"
                 className="absolute left-0 top-0 flex h-[44px] w-[44px] -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize items-center justify-center touch-none"
               >
-                <span className="h-4 w-4 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                <span className="h-4 w-4 rounded-xs border-2 border-white bg-[#00227A] shadow-sm" />
               </div>
 
               <div
@@ -525,7 +513,7 @@ export function SystemPdfCropModal({
                 aria-label="Resize top-right corner"
                 className="absolute right-0 top-0 flex h-[44px] w-[44px] translate-x-1/2 -translate-y-1/2 cursor-nesw-resize items-center justify-center touch-none"
               >
-                <span className="h-4 w-4 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                <span className="h-4 w-4 rounded-xs border-2 border-white bg-[#00227A] shadow-sm" />
               </div>
 
               <div
@@ -533,7 +521,7 @@ export function SystemPdfCropModal({
                 aria-label="Resize bottom-left corner"
                 className="absolute left-0 bottom-0 flex h-[44px] w-[44px] -translate-x-1/2 translate-y-1/2 cursor-nesw-resize items-center justify-center touch-none"
               >
-                <span className="h-4 w-4 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                <span className="h-4 w-4 rounded-xs border-2 border-white bg-[#00227A] shadow-sm" />
               </div>
 
               <div
@@ -541,7 +529,7 @@ export function SystemPdfCropModal({
                 aria-label="Resize bottom-right corner"
                 className="absolute right-0 bottom-0 flex h-[44px] w-[44px] translate-x-1/2 translate-y-1/2 cursor-nwse-resize items-center justify-center touch-none"
               >
-                <span className="h-4 w-4 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                <span className="h-4 w-4 rounded-xs border-2 border-white bg-[#00227A] shadow-sm" />
               </div>
 
               {/* 4 Edge Handles (44x44px touch targets) */}
@@ -550,7 +538,7 @@ export function SystemPdfCropModal({
                 aria-label="Resize top edge"
                 className="absolute left-1/2 top-0 flex h-[44px] w-[44px] -translate-x-1/2 -translate-y-1/2 cursor-ns-resize items-center justify-center touch-none"
               >
-                <span className="h-2 w-7 rounded-full border border-white bg-[#1F3A8A] shadow-sm" />
+                <span className="h-2 w-7 rounded-full border border-white bg-[#00227A] shadow-sm" />
               </div>
 
               <div
@@ -558,7 +546,7 @@ export function SystemPdfCropModal({
                 aria-label="Resize bottom edge"
                 className="absolute left-1/2 bottom-0 flex h-[44px] w-[44px] -translate-x-1/2 translate-y-1/2 cursor-ns-resize items-center justify-center touch-none"
               >
-                <span className="h-2 w-7 rounded-full border border-white bg-[#1F3A8A] shadow-sm" />
+                <span className="h-2 w-7 rounded-full border border-white bg-[#00227A] shadow-sm" />
               </div>
 
               <div
@@ -566,7 +554,7 @@ export function SystemPdfCropModal({
                 aria-label="Resize left edge"
                 className="absolute left-0 top-1/2 flex h-[44px] w-[44px] -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center touch-none"
               >
-                <span className="h-7 w-2 rounded-full border border-white bg-[#1F3A8A] shadow-sm" />
+                <span className="h-7 w-2 rounded-full border border-white bg-[#00227A] shadow-sm" />
               </div>
 
               <div
@@ -574,7 +562,7 @@ export function SystemPdfCropModal({
                 aria-label="Resize right edge"
                 className="absolute right-0 top-1/2 flex h-[44px] w-[44px] translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center touch-none"
               >
-                <span className="h-7 w-2 rounded-full border border-white bg-[#1F3A8A] shadow-sm" />
+                <span className="h-7 w-2 rounded-full border border-white bg-[#00227A] shadow-sm" />
               </div>
             </div>
           </div>
@@ -592,15 +580,13 @@ export function SystemPdfCropModal({
       </div>
 
       {/* Bottom Liquid Glass Bar with 3 buttons */}
-      <div
-        className={`mx-auto w-full max-w-4xl shrink-0 p-2.5 sm:p-3 ${LIQUID_GLASS_PANEL}`}
-      >
-        <div className="flex items-center gap-1.5 sm:gap-3">
+      <div className="glass-panel mx-auto w-full max-w-4xl shrink-0 p-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={advanceOrFinish}
             disabled={savingPage}
-            className="h-[48px] shrink-0 rounded-[14px] bg-[rgba(255,255,255,0.75)] px-2.5 sm:flex-1 sm:px-3 text-[15px] font-semibold text-[#0F172A] shadow-xs transition-colors hover:bg-[rgba(255,255,255,0.9)] active:bg-white disabled:opacity-50 whitespace-nowrap"
+            className="glass-btn-secondary h-11 shrink-0 px-3.5 sm:flex-1 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap"
           >
             Skip page
           </button>
@@ -609,7 +595,7 @@ export function SystemPdfCropModal({
             type="button"
             onClick={() => void executeSave(true)}
             disabled={savingPage}
-            className="h-[48px] flex-1 rounded-[14px] bg-[rgba(255,255,255,0.75)] px-2 sm:px-3 text-[15px] font-semibold text-[#0F172A] shadow-xs transition-colors hover:bg-[rgba(255,255,255,0.9)] active:bg-white disabled:opacity-50 whitespace-nowrap"
+            className="glass-btn-secondary h-11 flex-1 px-3 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap"
           >
             Use full page
           </button>
@@ -618,7 +604,7 @@ export function SystemPdfCropModal({
             type="button"
             onClick={() => void executeSave(false)}
             disabled={savingPage}
-            className="flex h-[48px] flex-[1.15] sm:flex-1 items-center justify-center gap-1.5 rounded-[14px] bg-[#1F3A8A] px-2.5 sm:px-3 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-[#193073] active:bg-[#152861] disabled:opacity-60 whitespace-nowrap"
+            className="glass-btn-primary flex h-11 flex-[1.15] sm:flex-1 items-center justify-center gap-1.5 px-4 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap"
           >
             {savingPage && (
               <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
@@ -631,31 +617,31 @@ export function SystemPdfCropModal({
       {/* Save Failed Dialog (Retry / Skip) */}
       {saveFailed && (
         <div
-          className="fixed inset-0 z-60 flex items-center justify-center bg-[rgba(15,23,42,0.55)] p-4"
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/30 p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Page save failed"
         >
-          <div className={`w-full max-w-sm p-5 ${LIQUID_GLASS_PANEL}`}>
-            <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-red-200 bg-red-50/95 px-4 py-3 text-sm font-medium text-red-700">
+          <div className="glass-panel w-full max-w-sm p-6">
+            <div className="mb-4 flex items-start gap-2.5 rounded-[14px] border border-[#ff3b30]/25 bg-[#ff3b30]/[0.09] px-3.5 py-2.5 text-[13px] font-medium text-[#1d1d1f]">
               <AlertCircle
-                className="mt-0.5 h-5 w-5 shrink-0 text-red-600"
+                className="mt-0.5 h-4 w-4 shrink-0 text-[#ff3b30]"
                 aria-hidden="true"
               />
               <span>Page {saveFailed.pageNumber} could not be saved.</span>
             </div>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={advanceOrFinish}
-                className="h-[48px] rounded-[14px] bg-[rgba(255,255,255,0.75)] px-4 text-[15px] font-semibold text-[#0F172A] hover:bg-white"
+                className="glass-btn-secondary h-11 px-4 text-[13px] font-medium"
               >
                 Skip
               </button>
               <button
                 type="button"
                 onClick={() => void executeSave(saveFailed.useFullPage)}
-                className="h-[48px] rounded-[14px] bg-[#1F3A8A] px-4 text-[15px] font-semibold text-white hover:bg-[#193073]"
+                className="glass-btn-primary h-11 px-4 text-[13px] font-medium"
               >
                 Retry
               </button>
@@ -667,24 +653,24 @@ export function SystemPdfCropModal({
       {/* Close Confirmation Dialog (Yes / No) */}
       {confirmStopOpen && (
         <div
-          className="fixed inset-0 z-60 flex items-center justify-center bg-[rgba(15,23,42,0.55)] p-4"
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/30 p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Stop cropping PDF"
           onClick={() => setConfirmStopOpen(false)}
         >
           <div
-            className={`w-full max-w-sm p-5 ${LIQUID_GLASS_PANEL}`}
+            className="glass-panel w-full max-w-sm p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="mb-4 rounded-2xl bg-white/90 px-4 py-3 text-center text-base font-semibold text-[#0F172A]">
+            <p className="mb-5 text-center text-[15px] font-semibold text-[#1d1d1f]">
               Stop now? Pages already saved stay.
             </p>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setConfirmStopOpen(false)}
-                className="h-[48px] rounded-[14px] bg-[rgba(255,255,255,0.75)] px-4 text-[15px] font-semibold text-[#0F172A] hover:bg-white"
+                className="glass-btn-secondary h-11 px-4 text-[13px] font-medium"
               >
                 No
               </button>
@@ -694,7 +680,7 @@ export function SystemPdfCropModal({
                   setConfirmStopOpen(false);
                   onClose();
                 }}
-                className="h-[48px] rounded-[14px] bg-[#1F3A8A] px-4 text-[15px] font-semibold text-white hover:bg-[#193073]"
+                className="glass-btn-primary h-11 px-4 text-[13px] font-medium"
               >
                 Yes
               </button>

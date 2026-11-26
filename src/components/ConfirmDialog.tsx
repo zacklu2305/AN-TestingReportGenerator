@@ -36,25 +36,30 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
+        className="glass-panel w-full max-w-lg p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 id="confirm-dialog-title" className="text-base font-semibold text-gray-900">
+        <h3
+          id="confirm-dialog-title"
+          className="text-[17px] font-semibold text-[#1d1d1f] tracking-[-0.01em]"
+        >
           {title}
         </h3>
-        <p className="mt-2 text-sm leading-relaxed text-gray-600">{message}</p>
-        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <p className="mt-2 text-[14px] leading-relaxed text-[#525257]">
+          {message}
+        </p>
+        <div className="mt-6 flex flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="min-h-[44px] rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100 whitespace-nowrap"
+            className="glass-btn-secondary px-5 py-2.5 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap shrink-0"
           >
             Cancel
           </button>
@@ -62,7 +67,7 @@ export function ConfirmDialog({
             <button
               type="button"
               onClick={onSecondary}
-              className="min-h-[44px] rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 whitespace-nowrap"
+              className="glass-btn-secondary px-5 py-2.5 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap shrink-0"
             >
               {secondaryLabel}
             </button>
@@ -70,11 +75,11 @@ export function ConfirmDialog({
           <button
             type="button"
             onClick={onConfirm}
-            className={`min-h-[44px] rounded-lg px-4 py-2 text-sm font-medium text-white whitespace-nowrap ${
+            className={`${
               confirmVariant === 'danger'
-                ? 'bg-red-600 hover:bg-red-700 active:bg-red-800'
-                : 'bg-[#1F3A8A] hover:bg-[#1E3A8A]/90'
-            }`}
+                ? 'rounded-full bg-[#ff3b30] hover:bg-[#e0352b] text-white shadow-[0_4px_12px_rgba(255,59,48,0.28)] transition-all'
+                : 'glass-btn-primary'
+            } px-5 py-2.5 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap shrink-0`}
           >
             {confirmLabel}
           </button>

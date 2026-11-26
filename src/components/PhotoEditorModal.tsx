@@ -1038,7 +1038,7 @@ export function PhotoEditorModal({
       aria-label={title}
     >
       {/* Top header */}
-      <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-gray-800 bg-[#1F3A8A] px-3 sm:px-4">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-gray-800 bg-[#00227A] px-3 sm:px-4">
         <button
           type="button"
           onClick={onCancel}
@@ -1065,7 +1065,7 @@ export function PhotoEditorModal({
               }}
               className={`min-h-[34px] rounded-md px-3 py-1 text-sm font-semibold transition-colors whitespace-nowrap ${
                 activeMode === 'adjust'
-                  ? 'bg-white text-[#1F3A8A] shadow-xs'
+                  ? 'bg-white text-[#00227A] shadow-xs'
                   : 'text-white/85 hover:text-white'
               }`}
             >
@@ -1081,7 +1081,7 @@ export function PhotoEditorModal({
               }}
               className={`min-h-[34px] rounded-md px-3 py-1 text-sm font-semibold transition-colors whitespace-nowrap ${
                 activeMode === 'annotate'
-                  ? 'bg-white text-[#1F3A8A] shadow-xs'
+                  ? 'bg-white text-[#00227A] shadow-xs'
                   : 'text-white/85 hover:text-white'
               }`}
             >
@@ -1096,7 +1096,7 @@ export function PhotoEditorModal({
           type="button"
           onClick={handleSaveClick}
           disabled={saving}
-          className="min-h-[40px] rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-[#1F3A8A] hover:bg-gray-100 disabled:opacity-60 whitespace-nowrap"
+          className="min-h-[40px] rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-[#00227A] hover:bg-gray-100 disabled:opacity-60 whitespace-nowrap"
         >
           {saving ? 'Saving...' : 'Save'}
         </button>
@@ -1171,10 +1171,10 @@ export function PhotoEditorModal({
                   </>
                 )}
 
-                <span className="absolute -left-1.5 -top-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A]" />
-                <span className="absolute -right-1.5 -top-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A]" />
-                <span className="absolute -left-1.5 -bottom-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A]" />
-                <span className="absolute -right-1.5 -bottom-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A]" />
+                <span className="absolute -left-1.5 -top-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
+                <span className="absolute -right-1.5 -top-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
+                <span className="absolute -left-1.5 -bottom-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
+                <span className="absolute -right-1.5 -bottom-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
               </div>
             </div>
           ) : (
@@ -1230,7 +1230,7 @@ export function PhotoEditorModal({
                   type="button"
                   onClick={handleCommitPendingText}
                   disabled={!pendingText.text.trim()}
-                  className="min-h-[42px] rounded-lg bg-[#1F3A8A] px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-[#2749AA] disabled:opacity-50"
+                  className="min-h-[42px] rounded-lg bg-[#00227A] px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-[#0a35a3] disabled:opacity-50"
                 >
                   Add
                 </button>
@@ -1265,7 +1265,7 @@ export function PhotoEditorModal({
                 <button
                   type="submit"
                   disabled={!pendingText.text.trim()}
-                  className="min-h-[42px] rounded-lg bg-[#1F3A8A] px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-[#2749AA] disabled:opacity-50"
+                  className="min-h-[42px] rounded-lg bg-[#00227A] px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-[#0a35a3] disabled:opacity-50"
                 >
                   Add
                 </button>
@@ -1393,7 +1393,7 @@ export function PhotoEditorModal({
                   }}
                   className={`flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap ${
                     tool === 'select'
-                      ? 'bg-[#1F3A8A] text-white'
+                      ? 'bg-[#00227A] text-white'
                       : 'bg-gray-800 text-gray-200 hover:bg-gray-700'
                   }`}
                 >
@@ -1409,7 +1409,7 @@ export function PhotoEditorModal({
                   disabled={atAnnotationLimit}
                   className={`flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-45 whitespace-nowrap ${
                     tool === 'arrow'
-                      ? 'bg-[#1F3A8A] text-white'
+                      ? 'bg-[#00227A] text-white'
                       : 'bg-gray-800 text-gray-200 hover:bg-gray-700'
                   }`}
                 >
@@ -1425,7 +1425,7 @@ export function PhotoEditorModal({
                   disabled={atAnnotationLimit}
                   className={`flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-45 whitespace-nowrap ${
                     tool === 'text'
-                      ? 'bg-[#1F3A8A] text-white'
+                      ? 'bg-[#00227A] text-white'
                       : 'bg-gray-800 text-gray-200 hover:bg-gray-700'
                   }`}
                 >
@@ -1448,7 +1448,7 @@ export function PhotoEditorModal({
                   type="button"
                   onClick={handleDeleteSelected}
                   disabled={selectedIndex === null}
-                  className="flex min-h-[40px] items-center gap-1 rounded-lg bg-red-600/90 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-40 whitespace-nowrap"
+                  className="flex min-h-[40px] items-center gap-1 rounded-full bg-[#ff3b30] px-3.5 py-1.5 text-[13px] font-medium text-white hover:bg-[#e0352b] disabled:opacity-40 whitespace-nowrap"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                   <span>Delete</span>
@@ -1512,7 +1512,7 @@ export function PhotoEditorModal({
                     onClick={handleDoubleArrowToggle}
                     className={`flex min-h-[36px] items-center gap-2 rounded-lg border px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap ${
                       doubleArrow
-                        ? 'border-blue-400 bg-[#1F3A8A] text-white'
+                        ? 'border-blue-400 bg-[#00227A] text-white'
                         : 'border-gray-700 bg-gray-800 text-gray-200 hover:bg-gray-700'
                     }`}
                   >
@@ -1532,7 +1532,7 @@ export function PhotoEditorModal({
                     onClick={handleTextOutlineToggle}
                     className={`flex min-h-[36px] items-center gap-2 rounded-lg border px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap ${
                       textOutline
-                        ? 'border-blue-400 bg-[#1F3A8A] text-white'
+                        ? 'border-blue-400 bg-[#00227A] text-white'
                         : 'border-gray-700 bg-gray-800 text-gray-200 hover:bg-gray-700'
                     }`}
                   >
@@ -1606,7 +1606,7 @@ export function PhotoEditorModal({
                       onClick={() => handleTextRotateSelect(deg)}
                       className={`min-h-[36px] min-w-[44px] rounded-lg px-2.5 py-1 text-xs font-semibold tabular-nums transition-colors ${
                         textRotate === deg
-                          ? 'bg-[#1F3A8A] text-white'
+                          ? 'bg-[#00227A] text-white'
                           : 'bg-gray-800 text-gray-200 hover:bg-gray-700'
                       }`}
                     >

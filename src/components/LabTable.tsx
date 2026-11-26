@@ -132,9 +132,9 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
   }
 
   return (
-    <div className="space-y-3 border-t border-gray-200 pt-4">
+    <div className="space-y-3 border-t border-black/[0.06] pt-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-gray-800">
+        <span className="text-[14px] font-semibold text-[#1d1d1f]">
           Color readings (L*, a*, b*)
         </span>
       </div>
@@ -144,14 +144,14 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
         {data.times.map((hr, idx) => (
           <span
             key={hr}
-            className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-gray-50 pl-2.5 pr-1 py-1 text-sm font-medium text-gray-800 tabular-nums"
+            className="glass-pill inline-flex items-center gap-1 pl-3 pr-1.5 py-1 text-[12px] font-medium text-[#1d1d1f] font-mono-num"
           >
             <span>{hr} hr</span>
             <button
               type="button"
               onClick={() => handleRemoveHour(idx)}
               aria-label={`Remove ${hr} hours`}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-800"
+              className="flex h-6 w-6 items-center justify-center rounded-full text-[#86868b] transition-colors hover:bg-black/[0.06] hover:text-[#1d1d1f]"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -168,24 +168,24 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
             onKeyDown={handleAddHourKeyDown}
             placeholder="Hr"
             aria-label="Add hour"
-            className="w-20 min-h-[38px] rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
+            className="glass-input w-20 h-9 px-2.5 text-[16px] sm:text-[13px] font-mono-num placeholder:font-sans placeholder:text-[#86868b]"
           />
           <button
             type="button"
             onClick={handleAddHour}
-            className="inline-flex min-h-[38px] items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100 whitespace-nowrap"
+            className="glass-btn-secondary inline-flex h-9 items-center gap-1 px-3.5 text-[13px] font-medium whitespace-nowrap"
           >
-            <Plus className="h-4 w-4" aria-hidden="true" />
+            <Plus className="h-3.5 w-3.5 text-[#525257]" aria-hidden="true" />
             <span>Add</span>
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto -mx-1 px-1">
+      <div className="glass-table-wrap overflow-x-auto p-3">
         <div className="min-w-[300px] space-y-2">
           {/* Column header */}
-          <div className="grid grid-cols-[54px_1fr_1fr_1fr_62px] items-center gap-1.5 px-1 text-xs font-semibold text-gray-500">
+          <div className="grid grid-cols-[54px_1fr_1fr_1fr_62px] items-center gap-1.5 px-1.5 pb-1 border-b border-black/[0.07] text-[11px] font-medium uppercase tracking-[0.04em] text-[#86868b]">
             <div>Time</div>
             <div>L*</div>
             <div>a*</div>
@@ -194,8 +194,8 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
           </div>
 
           {/* 0hr baseline row */}
-          <div className="grid grid-cols-[54px_1fr_1fr_1fr_62px] items-center gap-1.5 rounded-lg bg-gray-50 p-1.5">
-            <div className="text-sm font-semibold text-gray-700 tabular-nums">0 hr</div>
+          <div className="grid grid-cols-[54px_1fr_1fr_1fr_62px] items-center gap-1.5 rounded-[12px] bg-white/55 border border-black/[0.06] p-1.5">
+            <div className="text-[13px] font-semibold text-[#1d1d1f] font-mono-num">0 hr</div>
             <input
               {...getForgetfulInputAttrs(`${tableKeyPrefix}_base_l`)}
               type="text"
@@ -204,7 +204,7 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
               onChange={(e) => handleBaseChange('L', e.target.value)}
               placeholder="L*"
               aria-label="0 hour L star"
-              className="w-full min-w-0 min-h-[42px] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
+              className="glass-input w-full min-w-0 h-10 px-2 text-[16px] sm:text-[13px] font-mono-num placeholder:font-sans placeholder:text-[#86868b]"
             />
             <input
               {...getForgetfulInputAttrs(`${tableKeyPrefix}_base_a`)}
@@ -214,7 +214,7 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
               onChange={(e) => handleBaseChange('a', e.target.value)}
               placeholder="a*"
               aria-label="0 hour a star"
-              className="w-full min-w-0 min-h-[42px] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
+              className="glass-input w-full min-w-0 h-10 px-2 text-[16px] sm:text-[13px] font-mono-num placeholder:font-sans placeholder:text-[#86868b]"
             />
             <input
               {...getForgetfulInputAttrs(`${tableKeyPrefix}_base_b`)}
@@ -224,16 +224,16 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
               onChange={(e) => handleBaseChange('b', e.target.value)}
               placeholder="b*"
               aria-label="0 hour b star"
-              className="w-full min-w-0 min-h-[42px] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
+              className="glass-input w-full min-w-0 h-10 px-2 text-[16px] sm:text-[13px] font-mono-num placeholder:font-sans placeholder:text-[#86868b]"
             />
-            <div className="pr-1 text-right text-sm font-medium text-gray-400 tabular-nums">
+            <div className="pr-1 text-right text-[13px] font-medium text-[#86868b] font-mono-num">
               —
             </div>
           </div>
 
           {/* Hour reading rows */}
           {data.times.length === 0 ? (
-            <p className="px-1 py-2 text-xs text-gray-500">
+            <p className="px-1.5 py-2 text-[12px] text-[#86868b]">
               No hours configured. Add an hour above to enter readings.
             </p>
           ) : (
@@ -244,7 +244,7 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
               return (
                 <div key={hr} className="space-y-1">
                   <div className="grid grid-cols-[54px_1fr_1fr_1fr_62px] items-center gap-1.5 px-1.5 py-1">
-                    <div className="text-sm font-medium text-gray-800 tabular-nums">
+                    <div className="text-[13px] font-medium text-[#1d1d1f] font-mono-num">
                       {hr} hr
                     </div>
                     <input
@@ -257,7 +257,7 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
                       onChange={(e) => handleRowChange(idx, 'L', e.target.value)}
                       placeholder="L*"
                       aria-label={`${hr} hour L star`}
-                      className="w-full min-w-0 min-h-[42px] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
+                      className="glass-input w-full min-w-0 h-10 px-2 text-[16px] sm:text-[13px] font-mono-num placeholder:font-sans placeholder:text-[#86868b]"
                     />
                     <input
                       {...getForgetfulInputAttrs(
@@ -269,7 +269,7 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
                       onChange={(e) => handleRowChange(idx, 'a', e.target.value)}
                       placeholder="a*"
                       aria-label={`${hr} hour a star`}
-                      className="w-full min-w-0 min-h-[42px] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
+                      className="glass-input w-full min-w-0 h-10 px-2 text-[16px] sm:text-[13px] font-mono-num placeholder:font-sans placeholder:text-[#86868b]"
                     />
                     <input
                       {...getForgetfulInputAttrs(
@@ -281,35 +281,37 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
                       onChange={(e) => handleRowChange(idx, 'b', e.target.value)}
                       placeholder="b*"
                       aria-label={`${hr} hour b star`}
-                      className="w-full min-w-0 min-h-[42px] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 tabular-nums"
+                      className="glass-input w-full min-w-0 h-10 px-2 text-[16px] sm:text-[13px] font-mono-num placeholder:font-sans placeholder:text-[#86868b]"
                     />
-                    <div className="pr-1 text-right text-sm font-semibold text-gray-900 tabular-nums">
+                    <div className="pr-1 text-right text-[13px] font-semibold text-[#1d1d1f] font-mono-num">
                       {deltas ? deltas.de.toFixed(2) : '—'}
                     </div>
                   </div>
 
                   {tableMeta.quv === true && (
-                    <div className="grid grid-cols-[54px_1fr_1fr_1fr_62px] items-center gap-1.5 rounded-md bg-blue-50/60 px-2 py-1 text-xs text-gray-600 tabular-nums">
-                      <div className="font-medium text-[#1F3A8A]">Delta</div>
+                    <div className="grid grid-cols-[54px_1fr_1fr_1fr_62px] items-center gap-1.5 rounded-[10px] bg-[#00227A]/[0.06] px-2 py-1.5 text-[12px] text-[#525257] font-mono-num">
+                      <div className="font-sans text-[11px] font-semibold uppercase tracking-[0.04em] text-[#00227A]">
+                        Delta
+                      </div>
                       <div>
-                        <span className="text-gray-400">dL </span>
-                        <span className="font-medium text-gray-800">
+                        <span className="text-[#86868b]">dL </span>
+                        <span className="font-medium text-[#1d1d1f]">
                           {deltas ? formatSigned(deltas.dL) : '—'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400">da </span>
-                        <span className="font-medium text-gray-800">
+                        <span className="text-[#86868b]">da </span>
+                        <span className="font-medium text-[#1d1d1f]">
                           {deltas ? formatSigned(deltas.da) : '—'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-400">db </span>
-                        <span className="font-medium text-gray-800">
+                        <span className="text-[#86868b]">db </span>
+                        <span className="font-medium text-[#1d1d1f]">
                           {deltas ? formatSigned(deltas.db) : '—'}
                         </span>
                       </div>
-                      <div className="pr-0.5 text-right font-semibold text-[#1F3A8A]">
+                      <div className="pr-0.5 text-right font-semibold text-[#00227A]">
                         {deltas ? deltas.de.toFixed(2) : '—'}
                       </div>
                     </div>

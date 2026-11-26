@@ -677,39 +677,39 @@ export function ListScreen({
 
   return (
     <div
-      className={`glass-page-bg min-h-dvh flex flex-col ${
+      className={`min-h-dvh flex flex-col ${
         selectMode ? 'pb-24' : ''
       }`}
     >
-      {/* Liquid Glass Navy Header */}
-      <header className="glass-header sticky top-0 z-30 text-white">
-        <div className="mx-auto flex h-15 max-w-5xl items-center justify-between gap-2 px-3 sm:px-4">
-          <div className="flex min-w-0 items-center gap-2.5">
+      {/* Top Sticky Liquid Glass Nav */}
+      <header className="glass-nav mx-auto w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] lg:w-[calc(100%-4rem)] max-w-[1376px] mt-3 px-4 sm:px-6 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             {!logoFailed && (
-              <span className="inline-flex shrink-0 items-center justify-center rounded-full bg-white/95 px-2.5 py-1 shadow-xs">
-                <img
-                  src={COMPANY_LOGO_URL}
-                  alt="Company logo"
-                  referrerPolicy="no-referrer"
-                  onError={() => setLogoFailed(true)}
-                  className="h-[28px] w-auto object-contain"
-                />
-              </span>
+              <img
+                src={COMPANY_LOGO_URL}
+                alt="Company logo"
+                referrerPolicy="no-referrer"
+                onError={() => setLogoFailed(true)}
+                className="h-[22px] min-[769px]:h-[28px] w-auto object-contain shrink-0"
+              />
             )}
-            <h1 className="truncate text-base font-semibold tracking-tight text-white sm:text-lg">
+            <h1 className="truncate text-[16px] sm:text-[17px] font-semibold tracking-[-0.01em] text-[#1d1d1f] whitespace-nowrap">
               Testing Report
             </h1>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => fetchList('')}
               disabled={loading || isBatchWorking}
-              className="flex min-h-[40px] items-center gap-1.5 rounded-2xl border border-white/20 bg-white/12 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-md transition-colors hover:bg-white/22 active:bg-white/28 disabled:opacity-60 whitespace-nowrap shrink-0"
+              className="glass-pill inline-flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap shrink-0"
             >
               <RefreshCw
-                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                className={`h-3.5 w-3.5 text-[#525257] ${
+                  loading ? 'animate-spin text-[#00227A]' : ''
+                }`}
                 aria-hidden="true"
               />
               <span className="hidden sm:inline">Refresh</span>
@@ -718,278 +718,281 @@ export function ListScreen({
               type="button"
               onClick={onLogout}
               disabled={isBatchWorking}
-              className="flex min-h-[40px] items-center gap-1.5 rounded-2xl border border-white/20 bg-white/12 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-md transition-colors hover:bg-white/22 active:bg-white/28 disabled:opacity-60 whitespace-nowrap shrink-0"
+              className="glass-pill inline-flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap shrink-0"
             >
-              <LogOut className="h-4 w-4" aria-hidden="true" />
+              <LogOut className="h-3.5 w-3.5 text-[#525257]" aria-hidden="true" />
               <span>Log out</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-6 sm:pt-6">
-        {/* Search box */}
-        <div className="mb-3">
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500"
-              aria-hidden="true"
-            />
-            <input
-              {...getForgetfulInputAttrs('list_q')}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search VNCA No., Buyer, Factory, or Color Name..."
-              aria-label="Search testing reports"
-              className="glass-input block w-full min-h-[46px] pl-11 pr-10 py-2.5 text-base text-gray-900 placeholder:text-gray-500 focus:border-[#1F3A8A] focus:bg-white/95 focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery('')}
-                aria-label="Clear search"
-                className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-200/70 hover:text-gray-800"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Toolbar row above list: Select button (when ENABLE_BATCH is true) */}
-        {ENABLE_BATCH && (
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="text-xs font-medium text-gray-600">
-              {selectMode
-                ? maxLimitNotice
-                  ? 'Max 10 reports'
-                  : `Selected ${selectedIds.length} of ${MAX_BATCH_REPORTS} max`
-                : query.trim()
-                  ? `${visibleRows.length} result${visibleRows.length === 1 ? '' : 's'}`
-                  : `Latest ${visibleRows.length} report${visibleRows.length === 1 ? '' : 's'}`}
+      <main className="mx-auto w-full max-w-[1440px] flex-1 space-y-6 px-4 sm:px-6 lg:px-8 pt-6 pb-8">
+        {/* Search & Filter Control Card */}
+        <section className="glass-panel p-5 space-y-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative flex-1">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#86868b]"
+                aria-hidden="true"
+              />
+              <input
+                {...getForgetfulInputAttrs('list_q')}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search VNCA No., Buyer, Factory, or Color Name..."
+                aria-label="Search testing reports"
+                className="glass-input h-10 w-full pl-9 pr-9 text-[16px] sm:text-[13px] placeholder:text-[#86868b]"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  aria-label="Clear search"
+                  className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-[#86868b] transition-colors hover:bg-black/[0.06] hover:text-[#1d1d1f]"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
 
-            <button
-              type="button"
-              onClick={handleToggleSelectMode}
-              disabled={loading || isBatchWorking || visibleRows.length === 0}
-              className={`glass-btn inline-flex min-h-[40px] items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap ${
-                selectMode
-                  ? 'border-[#1F3A8A]/40 bg-[#1F3A8A]/10 text-[#1F3A8A]'
-                  : 'text-gray-800 hover:bg-white/95'
-              }`}
+            {ENABLE_BATCH && (
+              <div className="flex items-center justify-between gap-3 sm:justify-end">
+                <div className="text-[12px] font-medium text-[#86868b] font-mono-num whitespace-nowrap">
+                  {selectMode
+                    ? maxLimitNotice
+                      ? 'Max 10 reports'
+                      : `Selected ${selectedIds.length} of ${MAX_BATCH_REPORTS} max`
+                    : query.trim()
+                      ? `${visibleRows.length} result${visibleRows.length === 1 ? '' : 's'}`
+                      : `Latest ${visibleRows.length} report${visibleRows.length === 1 ? '' : 's'}`}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleToggleSelectMode}
+                  disabled={loading || isBatchWorking || visibleRows.length === 0}
+                  className={`${
+                    selectMode ? 'glass-pill-active' : 'glass-pill'
+                  } inline-flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap shrink-0`}
+                >
+                  <CheckSquare className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{selectMode ? 'Cancel' : 'Select'}</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Max 10 reports notice */}
+          {selectMode && maxLimitNotice && (
+            <div
+              role="status"
+              className="rounded-[14px] border border-[#ff9500]/30 bg-[#ff9500]/[0.1] px-3.5 py-2 text-[13px] font-medium text-[#1d1d1f]"
             >
-              <CheckSquare className="h-4 w-4" aria-hidden="true" />
-              <span>{selectMode ? 'Cancel' : 'Select'}</span>
-            </button>
-          </div>
-        )}
+              Max 10 reports
+            </div>
+          )}
 
-        {/* Max 10 reports notice */}
-        {selectMode && maxLimitNotice && (
-          <div
-            role="status"
-            className="mb-3 rounded-2xl border border-amber-300 bg-amber-50/90 px-4 py-2.5 text-sm font-medium text-amber-900 backdrop-blur-md"
-          >
-            Max 10 reports
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-3">
+          {error && (
             <ErrorBanner message={error} onDismiss={() => setError(null)} />
-          </div>
-        )}
+          )}
+        </section>
 
         {/* Report Rows */}
         {loading && rows.length === 0 ? (
-          <div className="glass-card flex flex-col items-center justify-center py-14 text-gray-600">
-            <Loader2
-              className="h-7 w-7 animate-spin text-[#1F3A8A]"
+          <div className="glass-panel flex min-h-[320px] flex-col items-center justify-center p-10">
+            <div
+              className="h-8 w-8 animate-spin rounded-full border-2 border-[#00227A]/25 border-t-[#00227A]"
               aria-hidden="true"
             />
-            <p className="mt-3 text-sm font-medium">Loading reports...</p>
-          </div>
-        ) : visibleRows.length === 0 ? (
-          <div className="glass-card px-6 py-12 text-center">
-            <p className="text-base font-semibold text-gray-900">
-              No report found
+            <p className="mt-4 text-[15px] font-semibold text-[#1d1d1f]">
+              Loading reports...
             </p>
           </div>
+        ) : visibleRows.length === 0 ? (
+          <section className="glass-panel p-6">
+            <div className="glass-inset flex h-[220px] items-center justify-center text-[14px] text-[#86868b]">
+              No report found
+            </div>
+          </section>
         ) : (
-          <div className="glass-card overflow-hidden">
-            {/* Desktop column header */}
-            <div
-              className={`hidden md:grid items-center gap-3 border-b border-slate-200/80 bg-white/50 px-4 py-2.5 text-xs font-semibold text-gray-600 ${
-                selectMode
-                  ? 'md:grid-cols-[36px_minmax(150px,1.2fr)_minmax(110px,1fr)_minmax(110px,1fr)_minmax(120px,1.2fr)]'
-                  : 'md:grid-cols-[minmax(150px,1.2fr)_minmax(110px,1fr)_minmax(110px,1fr)_minmax(120px,1.2fr)_24px]'
-              }`}
-            >
-              {selectMode && <div aria-hidden="true" />}
-              <div>VNCA No.</div>
-              <div>Buyer</div>
-              <div>Factory</div>
-              <div>Color Name</div>
-              {!selectMode && <div aria-hidden="true" />}
-            </div>
+          <section className="glass-panel p-4 sm:p-6">
+            <div className="glass-table-wrap overflow-hidden">
+              {/* Desktop column header */}
+              <div
+                className={`hidden md:grid items-center gap-3 border-b border-black/[0.07] bg-white/45 px-4 py-3 text-[11px] font-medium uppercase tracking-[0.04em] text-[#86868b] ${
+                  selectMode
+                    ? 'md:grid-cols-[36px_minmax(150px,1.2fr)_minmax(110px,1fr)_minmax(110px,1fr)_minmax(120px,1.2fr)]'
+                    : 'md:grid-cols-[minmax(150px,1.2fr)_minmax(110px,1fr)_minmax(110px,1fr)_minmax(120px,1.2fr)_24px]'
+                }`}
+              >
+                {selectMode && <div aria-hidden="true" />}
+                <div>VNCA No.</div>
+                <div>Buyer</div>
+                <div>Factory</div>
+                <div>Color Name</div>
+                {!selectMode && <div aria-hidden="true" />}
+              </div>
 
-            <div className="divide-y divide-slate-200/75">
-              {visibleRows.map((row) => {
-                const isChecked = selectedSet.has(row.reportNo);
-                const buyer = row.buyer ? String(row.buyer).trim() : '';
-                const factory = row.factory ? String(row.factory).trim() : '';
-                const color = row.color ? String(row.color).trim() : '';
-                const mobileDetails = [buyer, factory, color]
-                  .filter(Boolean)
-                  .join(' · ');
+              <div className="divide-y divide-black/[0.06]">
+                {visibleRows.map((row) => {
+                  const isChecked = selectedSet.has(row.reportNo);
+                  const buyer = row.buyer ? String(row.buyer).trim() : '';
+                  const factory = row.factory ? String(row.factory).trim() : '';
+                  const color = row.color ? String(row.color).trim() : '';
+                  const mobileDetails = [buyer, factory, color]
+                    .filter(Boolean)
+                    .join(' · ');
 
-                return (
-                  <button
-                    key={row.reportNo}
-                    type="button"
-                    disabled={isBatchWorking}
-                    onClick={() => {
-                      if (selectMode) {
-                        handleToggleRowSelection(row.reportNo);
-                      } else {
-                        onSelectReport(row.reportNo);
-                      }
-                    }}
-                    className={`group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[#1F3A8A] disabled:opacity-70 ${
-                      isChecked
-                        ? 'bg-blue-50/75 hover:bg-blue-50/90'
-                        : 'hover:bg-white/75 active:bg-blue-50/40'
-                    }`}
-                  >
-                    {/* Checkbox in select mode */}
-                    {selectMode && (
-                      <span
-                        role="checkbox"
-                        aria-checked={isChecked}
-                        aria-label={`Select ${row.reportNo}`}
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
-                          isChecked
-                            ? 'border-[#1F3A8A] bg-[#1F3A8A] text-white'
-                            : 'border-gray-400 bg-white/90'
-                        }`}
-                      >
-                        {isChecked && (
-                          <Check className="h-3.5 w-3.5 stroke-[3]" aria-hidden="true" />
-                        )}
-                      </span>
-                    )}
-
-                    {/* Mobile layout: 2-line row */}
-                    <div className="min-w-0 flex-1 md:hidden">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-base font-bold text-gray-900 tabular-nums break-words">
-                          {row.reportNo}
+                  return (
+                    <button
+                      key={row.reportNo}
+                      type="button"
+                      disabled={isBatchWorking}
+                      onClick={() => {
+                        if (selectMode) {
+                          handleToggleRowSelection(row.reportNo);
+                        } else {
+                          onSelectReport(row.reportNo);
+                        }
+                      }}
+                      className={`group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[#00227A] disabled:opacity-70 ${
+                        isChecked
+                          ? 'bg-[#00227A]/[0.06] hover:bg-[#00227A]/[0.09]'
+                          : 'hover:bg-white/45 active:bg-[#00227A]/[0.05]'
+                      }`}
+                    >
+                      {/* Checkbox in select mode */}
+                      {selectMode && (
+                        <span
+                          role="checkbox"
+                          aria-checked={isChecked}
+                          aria-label={`Select ${row.reportNo}`}
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border transition-colors ${
+                            isChecked
+                              ? 'border-[#00227A] bg-[#00227A] text-white'
+                              : 'border-black/20 bg-white/75'
+                          }`}
+                        >
+                          {isChecked && (
+                            <Check className="h-3.5 w-3.5 stroke-[3]" aria-hidden="true" />
+                          )}
                         </span>
-                        {row.saved === true && (
-                          <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 whitespace-nowrap">
-                            Saved
-                          </span>
-                        )}
-                      </div>
-                      {mobileDetails && (
-                        <p className="mt-0.5 text-sm text-gray-700 truncate">
-                          {mobileDetails}
-                        </p>
                       )}
-                    </div>
 
-                    {/* Desktop layout: aligned row columns */}
-                    <div className="hidden min-w-0 flex-1 md:grid md:grid-cols-[minmax(150px,1.2fr)_minmax(110px,1fr)_minmax(110px,1fr)_minmax(120px,1.2fr)] md:items-center md:gap-3">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <span className="truncate text-sm font-bold text-gray-900 tabular-nums">
-                          {row.reportNo}
-                        </span>
-                        {row.saved === true && (
-                          <span className="inline-flex shrink-0 items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 whitespace-nowrap">
-                            Saved
+                      {/* Mobile layout: 2-line row */}
+                      <div className="min-w-0 flex-1 md:hidden">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[14px] font-semibold text-[#00227A] font-mono-num break-words">
+                            {row.reportNo}
                           </span>
+                          {row.saved === true && (
+                            <span className="inline-flex items-center rounded-full border border-[#34c759]/25 bg-[#34c759]/[0.1] px-2.5 py-0.5 text-[11px] font-semibold text-[#248a3d] whitespace-nowrap">
+                              Saved
+                            </span>
+                          )}
+                        </div>
+                        {mobileDetails && (
+                          <p className="mt-0.5 text-[13px] text-[#525257] truncate">
+                            {mobileDetails}
+                          </p>
                         )}
                       </div>
-                      <div className="truncate text-sm text-gray-800">
-                        {buyer || '—'}
-                      </div>
-                      <div className="truncate text-sm text-gray-800">
-                        {factory || '—'}
-                      </div>
-                      <div className="truncate text-sm text-gray-800">
-                        {color || '—'}
-                      </div>
-                    </div>
 
-                    {!selectMode && (
-                      <ChevronRight
-                        className="h-5 w-5 shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5 group-hover:text-[#1F3A8A]"
-                        aria-hidden="true"
-                      />
-                    )}
-                  </button>
-                );
-              })}
+                      {/* Desktop layout: aligned row columns */}
+                      <div className="hidden min-w-0 flex-1 md:grid md:grid-cols-[minmax(150px,1.2fr)_minmax(110px,1fr)_minmax(110px,1fr)_minmax(120px,1.2fr)] md:items-center md:gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="truncate text-[13px] font-semibold text-[#00227A] group-hover:text-[#0a35a3] font-mono-num">
+                            {row.reportNo}
+                          </span>
+                          {row.saved === true && (
+                            <span className="inline-flex shrink-0 items-center rounded-full border border-[#34c759]/25 bg-[#34c759]/[0.1] px-2.5 py-0.5 text-[11px] font-semibold text-[#248a3d] whitespace-nowrap">
+                              Saved
+                            </span>
+                          )}
+                        </div>
+                        <div className={`truncate text-[13px] ${buyer ? 'text-[#1d1d1f]' : 'text-[#86868b]'}`}>
+                          {buyer || '—'}
+                        </div>
+                        <div className={`truncate text-[13px] ${factory ? 'text-[#1d1d1f]' : 'text-[#86868b]'}`}>
+                          {factory || '—'}
+                        </div>
+                        <div className={`truncate text-[13px] ${color ? 'text-[#1d1d1f]' : 'text-[#86868b]'}`}>
+                          {color || '—'}
+                        </div>
+                      </div>
+
+                      {!selectMode && (
+                        <ChevronRight
+                          className="h-4 w-4 shrink-0 text-[#86868b] transition-transform group-hover:translate-x-0.5 group-hover:text-[#00227A]"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          </section>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="py-4 text-center text-xs text-gray-500">
+      <footer className="mt-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-[12px] text-[#86868b]">
         Developed by Zack Lu
       </footer>
 
-      {/* Batch Download Bottom Bar */}
+      {/* Floating Batch Download Bottom Bar */}
       {ENABLE_BATCH && selectMode && (
-        <div className="glass-bar fixed bottom-0 left-0 right-0 z-30 px-4 py-3">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              {batchProgress ? (
-                <div className="flex items-center gap-2 text-sm font-semibold text-[#1F3A8A]">
-                  <Loader2
-                    className="h-4 w-4 shrink-0 animate-spin"
-                    aria-hidden="true"
-                  />
-                  <span className="truncate">{batchProgress}</span>
-                </div>
-              ) : (
-                <span className="text-sm font-medium text-gray-700">
-                  {maxLimitNotice
-                    ? 'Max 10 reports'
-                    : `${selectedIds.length} selected`}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleToggleSelectMode}
-                disabled={isBatchWorking}
-                className="glass-btn min-h-[44px] px-4 py-2 text-sm font-medium text-gray-800 hover:bg-white disabled:opacity-50 whitespace-nowrap"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDownloadSelectedClick}
-                disabled={isBatchWorking || selectedIds.length === 0}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-2xl bg-[#1F3A8A] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#193073] active:bg-[#152861] disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap"
-              >
-                {isBatchWorking ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        <div className="fixed bottom-3 left-4 right-4 sm:left-6 sm:right-6 z-30 mx-auto max-w-[1376px]">
+          <div className="glass-panel px-4 sm:px-6 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                {batchProgress ? (
+                  <div className="flex items-center gap-2 text-[13px] font-semibold text-[#00227A]">
+                    <Loader2
+                      className="h-4 w-4 shrink-0 animate-spin"
+                      aria-hidden="true"
+                    />
+                    <span className="truncate">{batchProgress}</span>
+                  </div>
                 ) : (
-                  <Download className="h-4 w-4" aria-hidden="true" />
+                  <span className="text-[13px] font-medium text-[#525257] font-mono-num">
+                    {maxLimitNotice
+                      ? 'Max 10 reports'
+                      : `${selectedIds.length} selected`}
+                  </span>
                 )}
-                <span>
-                  {isBatchWorking
-                    ? batchProgress
-                    : `Download (${selectedIds.length})`}
-                </span>
-              </button>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleToggleSelectMode}
+                  disabled={isBatchWorking}
+                  className="glass-btn-secondary h-10 px-5 text-[13px] font-medium disabled:opacity-50 whitespace-nowrap"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadSelectedClick}
+                  disabled={isBatchWorking || selectedIds.length === 0}
+                  className="glass-btn-primary inline-flex h-10 items-center gap-1.5 px-5 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap"
+                >
+                  {isBatchWorking ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Download className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  <span>
+                    {isBatchWorking
+                      ? batchProgress
+                      : `Download (${selectedIds.length})`}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1002,19 +1005,19 @@ export function ListScreen({
           aria-modal="true"
           aria-labelledby="download-format-title"
           onClick={() => setFormatModalOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,23,42,0.5)]"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="glass-format-panel w-[92vw] max-w-[420px] p-[24px]"
+            className="glass-panel w-full max-w-[420px] p-6"
           >
             <h2
               id="download-format-title"
-              className="text-[18px] font-semibold leading-snug text-[#0F172A]"
+              className="text-[17px] font-semibold tracking-[-0.01em] text-[#1d1d1f]"
             >
               Download format
             </h2>
-            <p className="mt-1 text-[14px] text-[#475569]">
+            <p className="mt-1 text-[13px] text-[#525257] font-mono-num">
               {selectedIds.length}{' '}
               {selectedIds.length === 1 ? 'report' : 'reports'} selected
             </p>
@@ -1022,7 +1025,7 @@ export function ListScreen({
             <div
               role="radiogroup"
               aria-labelledby="download-format-title"
-              className="mt-5 flex flex-col gap-[10px]"
+              className="mt-5 flex flex-col gap-2.5"
             >
               {FORMAT_OPTIONS.map((option) => {
                 const isSelected = selectedFormat === option.value;
@@ -1033,25 +1036,25 @@ export function ListScreen({
                     role="radio"
                     aria-checked={isSelected}
                     onClick={() => setSelectedFormat(option.value)}
-                    className={`flex h-[56px] w-full items-center gap-3 rounded-[14px] border-[1.5px] px-4 text-left transition-colors focus-visible:outline-2 focus-visible:outline-[#1F3A8A] ${
+                    className={`flex h-[54px] w-full items-center gap-3 rounded-[14px] px-4 text-left transition-colors focus-visible:outline-2 focus-visible:outline-[#00227A] ${
                       isSelected
-                        ? 'border-[#1F3A8A] bg-[rgba(31,58,138,0.10)]'
-                        : 'border-[rgba(15,23,42,0.12)] bg-[rgba(255,255,255,0.75)] hover:bg-[rgba(255,255,255,0.9)]'
+                        ? 'border-[1.5px] border-[#00227A] bg-[#00227A]/[0.08]'
+                        : 'border border-black/[0.08] bg-white/55 hover:bg-white/82 hover:border-[#00227A]/20'
                     }`}
                   >
                     <span
                       aria-hidden="true"
                       className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors ${
                         isSelected
-                          ? 'border-[#1F3A8A] bg-white'
-                          : 'border-[rgba(15,23,42,0.28)] bg-white/80'
+                          ? 'border-[#00227A] bg-white'
+                          : 'border-black/25 bg-white/80'
                       }`}
                     >
                       {isSelected && (
-                        <span className="h-2.5 w-2.5 rounded-full bg-[#1F3A8A]" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#00227A]" />
                       )}
                     </span>
-                    <span className="text-[16px] font-medium text-[#0F172A]">
+                    <span className="text-[14px] font-medium text-[#1d1d1f]">
                       {option.label}
                     </span>
                   </button>
@@ -1064,14 +1067,14 @@ export function ListScreen({
                 type="button"
                 data-format-cancel="true"
                 onClick={() => setFormatModalOpen(false)}
-                className="flex h-[48px] items-center justify-center rounded-[14px] border border-[rgba(15,23,42,0.12)] bg-[rgba(255,255,255,0.75)] text-[15px] font-semibold text-[#0F172A] transition-colors hover:bg-[rgba(255,255,255,0.9)] active:bg-white"
+                className="glass-btn-secondary flex h-11 items-center justify-center px-5 text-[13px] font-medium"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmFormatModal}
-                className="flex h-[48px] items-center justify-center rounded-[14px] bg-[#1F3A8A] text-[15px] font-semibold text-white transition-colors hover:bg-[#193073] active:bg-[#152861]"
+                className="glass-btn-primary flex h-11 items-center justify-center px-5 text-[13px] font-medium"
               >
                 Download
               </button>

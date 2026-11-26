@@ -150,32 +150,43 @@ export default function App() {
     setScreen('list');
   }
 
-  if (screen === 'login') {
-    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
-  }
-
   return (
-    <>
-      {screen === 'report' && selectedReportNo && meta ? (
-        <ReportScreen
-          key={DISABLE_FIELD_MEMORY ? selectedReportNo : undefined}
-          session={session}
-          meta={meta}
-          reportNo={selectedReportNo}
-          onBack={handleBackToList}
-        />
-      ) : (
-        <ListScreen
-          session={session}
-          onSelectReport={handleSelectReport}
-          onLogout={handleLogout}
-        />
-      )}
+    <div className="relative min-h-dvh flex flex-col text-[#1d1d1f] overflow-x-clip">
+      {/* Fixed ambient color blobs behind Liquid Glass surfaces (static, no animation) */}
+      <div className="liquid-bg-canvas" aria-hidden="true">
+        <div className="liquid-blob-navy" />
+        <div className="liquid-blob-cobalt" />
+        <div className="liquid-blob-sky" />
+      </div>
+
+      {/* Foreground shell */}
+      <div className="relative z-10 flex min-h-dvh flex-col">
+        {screen === 'login' ? (
+          <LoginScreen onLoginSuccess={handleLoginSuccess} />
+        ) : screen === 'report' && selectedReportNo && meta ? (
+          <ReportScreen
+            key={DISABLE_FIELD_MEMORY ? selectedReportNo : undefined}
+            session={session}
+            meta={meta}
+            reportNo={selectedReportNo}
+            onBack={handleBackToList}
+          />
+        ) : (
+          <ListScreen
+            session={session}
+            onSelectReport={handleSelectReport}
+            onLogout={handleLogout}
+          />
+        )}
+      </div>
 
       {loadingMeta && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/20 backdrop-blur-xs">
-          <div className="glass-card flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-gray-800">
-            <Loader2 className="h-5 w-5 animate-spin text-[#1F3A8A]" aria-hidden="true" />
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4">
+          <div className="glass-panel flex items-center gap-3 px-6 py-4 text-[13px] font-medium text-[#1d1d1f]">
+            <Loader2
+              className="h-5 w-5 animate-spin text-[#00227A]"
+              aria-hidden="true"
+            />
             <span>Opening report...</span>
           </div>
         </div>
@@ -187,6 +198,6 @@ export default function App() {
           onLoginSuccess={handleOverlayLoginSuccess}
         />
       )}
-    </>
+    </div>
   );
 }

@@ -624,10 +624,10 @@ export function ReportScreen({
               const rawKey = `${blockKey}_${fieldKey}`;
               const fallbackId = `field-${blockKey}-${fieldKey}`;
               return (
-                <div key={fieldKey} className="space-y-1.5">
+                <div key={fieldKey} className="flex flex-col gap-1.5">
                   <label
                     htmlFor={getForgetfulFieldId(rawKey, fallbackId)}
-                    className="block text-sm font-medium text-gray-700"
+                    className="px-1 text-[11px] font-medium uppercase tracking-[0.04em] text-[#86868b]"
                   >
                     {label}
                   </label>
@@ -637,7 +637,7 @@ export function ReportScreen({
                     value={values[fieldKey] ?? ''}
                     onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
                     placeholder={`Enter ${label.toLowerCase()}`}
-                    className="block w-full min-h-[44px] rounded-xl border border-gray-300 bg-white px-3.5 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20"
+                    className="glass-input h-10 w-full px-3.5 text-[16px] sm:text-[13px] placeholder:text-[#86868b]"
                   />
                 </div>
               );
@@ -673,48 +673,63 @@ export function ReportScreen({
   }
 
   return (
-    <div
-      className={`min-h-dvh flex flex-col pb-12 ${
-        ENABLE_NEW_LIST ? 'glass-page-bg' : 'bg-gray-100'
-      }`}
-    >
-      {/* Sticky dark navy top bar */}
+    <div className="min-h-dvh flex flex-col pb-12">
+      {/* Top Sticky Liquid Glass Nav */}
       <header
-        className={`sticky top-0 z-30 text-white ${
-          ENABLE_NEW_LIST ? 'glass-header' : 'bg-[#1F3A8A] shadow-sm'
-        }`}
+        className={
+          ENABLE_NEW_LIST
+            ? 'glass-nav mx-auto w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)] lg:w-[calc(100%-4rem)] max-w-[1376px] mt-3 px-4 sm:px-6 py-3'
+            : 'sticky top-0 z-30 bg-[#00227A] text-white shadow-sm'
+        }
       >
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between gap-2 px-3 sm:px-4">
+        <div
+          className={
+            ENABLE_NEW_LIST
+              ? 'flex flex-wrap items-center justify-between gap-2.5'
+              : 'mx-auto flex h-14 max-w-4xl items-center justify-between gap-2 px-3 sm:px-4'
+          }
+        >
           {/* Left: Back + Report number */}
-          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
+          <div className="flex min-w-0 items-center gap-2.5">
             <button
               type="button"
               onClick={handleBackClick}
-              className="flex min-h-[40px] items-center gap-1 rounded-xl px-2 py-1.5 text-sm font-medium text-white hover:bg-white/15 active:bg-white/20 shrink-0 whitespace-nowrap"
+              className={
+                ENABLE_NEW_LIST
+                  ? 'glass-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[13px] font-medium shrink-0 whitespace-nowrap'
+                  : 'flex min-h-[40px] items-center gap-1 rounded-full px-3 py-1.5 text-[13px] font-medium text-white hover:bg-white/15 shrink-0 whitespace-nowrap'
+              }
             >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <ArrowLeft
+                className={`h-3.5 w-3.5 ${ENABLE_NEW_LIST ? 'text-[#525257]' : ''}`}
+                aria-hidden="true"
+              />
               <span>Back</span>
             </button>
 
-            <h1 className="truncate text-base font-bold tracking-tight text-white tabular-nums sm:text-lg">
+            <h1
+              className={`truncate text-[16px] sm:text-[17px] font-semibold tracking-[-0.01em] font-mono-num ${
+                ENABLE_NEW_LIST ? 'text-[#1d1d1f]' : 'text-white'
+              }`}
+            >
               {reportNo}
             </h1>
           </div>
 
           {/* Right: Save + Word Download button */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => void performSave()}
               disabled={loading || isBusy}
-              className="relative flex min-h-[40px] items-center gap-1.5 rounded-2xl bg-white/95 px-3 py-1.5 text-sm font-semibold text-[#1F3A8A] shadow-xs transition-colors hover:bg-white active:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+              className="glass-btn-primary relative inline-flex h-9 items-center gap-1.5 px-4 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap"
             >
               {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
               ) : savedTime && !isDirty ? (
-                <Check className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                <Check className="h-3.5 w-3.5 text-[#34c759]" aria-hidden="true" />
               ) : (
-                <Save className="h-4 w-4" aria-hidden="true" />
+                <Save className="h-3.5 w-3.5" aria-hidden="true" />
               )}
               <span>
                 {saving
@@ -727,7 +742,7 @@ export function ReportScreen({
                 <span
                   title="Unsaved changes"
                   aria-label="Unsaved changes"
-                  className="ml-0.5 inline-block h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-white"
+                  className="ml-0.5 inline-block h-2 w-2 rounded-full bg-[#ff9500] ring-2 ring-white"
                 />
               )}
             </button>
@@ -736,12 +751,15 @@ export function ReportScreen({
               type="button"
               onClick={() => void handleDownloadWord()}
               disabled={loading || isBusy || hasUploadingPhotos}
-              className="flex min-h-[40px] items-center gap-1.5 rounded-2xl border border-white/20 bg-white/15 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-md transition-colors hover:bg-white/25 active:bg-white/30 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+              className="glass-btn-secondary inline-flex h-9 items-center gap-1.5 px-4 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap"
             >
               {downloadPhase ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2
+                  className="h-3.5 w-3.5 animate-spin text-[#00227A]"
+                  aria-hidden="true"
+                />
               ) : (
-                <Download className="h-4 w-4" aria-hidden="true" />
+                <Download className="h-3.5 w-3.5 text-[#525257]" aria-hidden="true" />
               )}
               <span>
                 {downloadPhase === 'saving'
@@ -755,14 +773,17 @@ export function ReportScreen({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-4xl flex-1 space-y-5 px-4 pt-4 sm:pt-6">
+      <main className="mx-auto w-full max-w-[1040px] flex-1 space-y-6 px-4 sm:px-6 pt-6">
         {/* Building report status banner */}
         {downloadPhase === 'preparing' && (
           <div
             role="status"
-            className="flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50/90 px-4 py-3 text-sm font-medium text-[#1F3A8A] backdrop-blur-md"
+            className="glass-panel flex items-center gap-3 px-4 py-3.5 text-[13px] font-medium text-[#1d1d1f]"
           >
-            <Loader2 className="h-5 w-5 shrink-0 animate-spin" aria-hidden="true" />
+            <Loader2
+              className="h-4 w-4 shrink-0 animate-spin text-[#00227A]"
+              aria-hidden="true"
+            />
             <span>Building report... this can take 10 to 40 seconds</span>
           </div>
         )}
@@ -773,35 +794,42 @@ export function ReportScreen({
         )}
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white py-16 text-gray-500">
-            <Loader2 className="h-7 w-7 animate-spin text-[#1F3A8A]" aria-hidden="true" />
-            <p className="mt-3 text-sm">Loading report {reportNo}...</p>
+          <div className="glass-panel flex min-h-[320px] flex-col items-center justify-center p-10">
+            <div
+              className="h-8 w-8 animate-spin rounded-full border-2 border-[#00227A]/25 border-t-[#00227A]"
+              aria-hidden="true"
+            />
+            <p className="mt-4 text-[15px] font-semibold text-[#1d1d1f]">
+              Loading report {reportNo}...
+            </p>
           </div>
         ) : (
           <>
             {/* SECTION A: General information */}
-            <section aria-labelledby="section-general" className="space-y-3">
+            <section aria-labelledby="section-general" className="glass-panel p-5 sm:p-6">
               <h2
                 id="section-general"
-                className="text-base font-semibold text-gray-900"
+                className="mb-4 text-[15px] font-semibold tracking-[-0.01em] text-[#1d1d1f]"
               >
                 General information
               </h2>
 
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs sm:p-5">
-                {generalEntries.length === 0 ? (
-                  <p className="text-sm text-gray-500">
-                    No general information available.
-                  </p>
-                ) : (
-                  <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+              {generalEntries.length === 0 ? (
+                <div className="glass-inset px-4 py-6 text-center text-[13px] text-[#86868b]">
+                  No general information available.
+                </div>
+              ) : (
+                <div className="glass-table-wrap overflow-hidden">
+                  <dl className="grid grid-cols-1 divide-y divide-black/[0.06] sm:grid-cols-2 sm:divide-y-0">
                     {generalEntries.map(([key, val]) => (
                       <div
                         key={key}
-                        className="border-b border-gray-100 pb-2.5 last:border-b-0 sm:last:border-b"
+                        className="px-4 py-3 sm:border-b sm:border-black/[0.06]"
                       >
-                        <dt className="text-xs font-medium text-gray-500">{key}</dt>
-                        <dd className="mt-0.5 text-sm font-medium text-gray-900 break-words">
+                        <dt className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#86868b]">
+                          {key}
+                        </dt>
+                        <dd className="mt-0.5 text-[13px] font-medium text-[#1d1d1f] break-words">
                           {val == null || String(val).trim() === ''
                             ? '—'
                             : String(val)}
@@ -809,82 +837,80 @@ export function ReportScreen({
                       </div>
                     ))}
                   </dl>
-                )}
+                </div>
+              )}
 
-                <div className="mt-5 grid grid-cols-1 gap-4 border-t border-gray-200 pt-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label
-                      htmlFor={getForgetfulFieldId('size', 'report-size')}
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Size (cm)
-                    </label>
-                    <input
-                      {...getForgetfulInputAttrs('size', 'report-size')}
-                      type="text"
-                      value={size}
-                      onChange={(e) => {
-                        setSize(e.target.value);
-                        setIsDirty(true);
-                      }}
-                      placeholder="Enter panel size in cm"
-                      className="block w-full min-h-[44px] rounded-xl border border-gray-300 bg-white px-3.5 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20"
-                    />
-                  </div>
+              <div className="mt-5 grid grid-cols-1 gap-4 border-t border-black/[0.06] pt-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor={getForgetfulFieldId('size', 'report-size')}
+                    className="px-1 text-[11px] font-medium uppercase tracking-[0.04em] text-[#86868b]"
+                  >
+                    Size (cm)
+                  </label>
+                  <input
+                    {...getForgetfulInputAttrs('size', 'report-size')}
+                    type="text"
+                    value={size}
+                    onChange={(e) => {
+                      setSize(e.target.value);
+                      setIsDirty(true);
+                    }}
+                    placeholder="Enter panel size in cm"
+                    className="glass-input h-10 w-full px-3.5 text-[16px] sm:text-[13px] placeholder:text-[#86868b]"
+                  />
                 </div>
               </div>
             </section>
 
             {/* SECTION B: Finishing system sheet */}
-            <section aria-labelledby="section-system" className="space-y-3">
+            <section aria-labelledby="section-system" className="glass-panel p-5 sm:p-6">
               <h2
                 id="section-system"
-                className="text-base font-semibold text-gray-900"
+                className="mb-4 text-[15px] font-semibold tracking-[-0.01em] text-[#1d1d1f]"
               >
                 Finishing system sheet
               </h2>
 
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs sm:p-5">
-                <div className="[&>div]:border-t-0 [&>div]:pt-0">
-                  <PhotoSlotArea
-                    session={session}
-                    reportNo={reportNo}
-                    slot="SYSTEM"
-                    photos={getSlotPhotos('SYSTEM')}
-                    photoQueue={photoQueueRef.current}
-                    onUpdateSlotPhotos={handleUpdateSlotPhotos}
-                    onError={(msg) => setError(msg)}
-                  />
-                </div>
-                <p className="mt-3 text-xs text-gray-500">
-                  Each photo is printed as one full page in the report. The order here is the page order.
-                </p>
+              <div className="[&>div]:border-t-0 [&>div]:pt-0">
+                <PhotoSlotArea
+                  session={session}
+                  reportNo={reportNo}
+                  slot="SYSTEM"
+                  photos={getSlotPhotos('SYSTEM')}
+                  photoQueue={photoQueueRef.current}
+                  onUpdateSlotPhotos={handleUpdateSlotPhotos}
+                  onError={(msg) => setError(msg)}
+                />
               </div>
+              <p className="mt-3 text-[12px] text-[#86868b]">
+                Each photo is printed as one full page in the report. The order here is the page order.
+              </p>
             </section>
 
             {/* SECTION C: Testing protocol */}
-            <section aria-labelledby="section-protocol" className="space-y-3">
+            <section aria-labelledby="section-protocol" className="space-y-4">
               <h2
                 id="section-protocol"
-                className="text-base font-semibold text-gray-900"
+                className="px-1 text-[15px] font-semibold tracking-[-0.01em] text-[#1d1d1f]"
               >
                 Testing protocol
               </h2>
 
-              {/* Suggest warnings yellow banner */}
+              {/* Suggest warnings banner */}
               {warnings.length > 0 && (
                 <div
                   role="status"
-                  className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                  className="rounded-[14px] border border-[#ff9500]/30 bg-[#ff9500]/[0.1] px-4 py-3 text-[13px] text-[#1d1d1f]"
                 >
                   <div className="flex items-start gap-2.5">
                     <AlertTriangle
-                      className="mt-0.5 h-5 w-5 shrink-0 text-amber-600"
+                      className="mt-0.5 h-4 w-4 shrink-0 text-[#ff9500]"
                       aria-hidden="true"
                     />
                     <div className="space-y-1">
                       {warnings.map((w, idx) => (
-                        <p key={idx} className="leading-snug">
+                        <p key={idx} className="leading-relaxed">
                           {w}
                         </p>
                       ))}
@@ -893,7 +919,7 @@ export function ReportScreen({
                 </div>
               )}
 
-              <div className="space-y-3.5">
+              <div className="space-y-4">
                 {protocolCards.map((card) => {
                   if (card.kind === 'shared-slot') {
                     const mode: 'off' | 'visual' | 'xrite' = enabledBlocks.has(
@@ -915,10 +941,10 @@ export function ReportScreen({
                     return (
                       <div
                         key={`slot-${card.slot}`}
-                        className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs sm:p-5"
+                        className="glass-panel p-5 sm:p-6"
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <h3 className="text-base font-semibold text-gray-900">
+                          <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-[#1d1d1f]">
                             {activeBlock ? activeBlock.label : card.title}
                           </h3>
 
@@ -926,7 +952,7 @@ export function ReportScreen({
                           <div
                             role="radiogroup"
                             aria-label={`${card.title} mode`}
-                            className="inline-grid grid-cols-3 rounded-lg bg-gray-100 p-1 sm:w-auto"
+                            className="flex flex-wrap items-center gap-1.5"
                           >
                             {(
                               [
@@ -949,13 +975,13 @@ export function ReportScreen({
                                       value
                                     )
                                   }
-                                  className={`min-h-[38px] rounded-md px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap ${
+                                  className={`${
                                     selected
                                       ? value === 'off'
-                                        ? 'bg-white text-gray-900 shadow-xs'
-                                        : 'bg-[#1F3A8A] text-white shadow-xs'
-                                      : 'text-gray-600 hover:text-gray-900'
-                                  }`}
+                                        ? 'rounded-full bg-white/90 border border-black/[0.12] text-[#1d1d1f] font-semibold shadow-xs transition-colors'
+                                        : 'glass-pill-active'
+                                      : 'glass-pill'
+                                  } px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap shrink-0`}
                                 >
                                   {label}
                                 </button>
@@ -977,15 +1003,15 @@ export function ReportScreen({
                   return (
                     <div
                       key={blockKey}
-                      className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs sm:p-5"
+                      className="glass-panel p-5 sm:p-6"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-base font-semibold text-gray-900">
+                        <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-[#1d1d1f]">
                           {block.label}
                         </h3>
 
                         {isAlways ? (
-                          <span className="text-xs font-medium text-gray-500 whitespace-nowrap">
+                          <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#86868b] whitespace-nowrap">
                             Always included
                           </span>
                         ) : (
@@ -995,13 +1021,13 @@ export function ReportScreen({
                             aria-checked={isOn}
                             aria-label={`Toggle ${block.label}`}
                             onClick={() => handleToggleSingleBlock(blockKey, !isOn)}
-                            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F3A8A] ${
-                              isOn ? 'bg-[#1F3A8A]' : 'bg-gray-300'
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00227A] ${
+                              isOn ? 'bg-[#00227A]' : 'bg-black/15'
                             }`}
                           >
                             <span
-                              className={`inline-block h-5 w-5 rounded-full bg-white shadow-xs transition-transform ${
-                                isOn ? 'translate-x-6' : 'translate-x-1'
+                              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                                isOn ? 'translate-x-[22px]' : 'translate-x-[2px]'
                               }`}
                             />
                           </button>

@@ -138,7 +138,7 @@ export function LoginScreen({
   const activeBoxIndex = Math.min(code.length, 5);
 
   const card = (
-    <div className="glass-card relative z-10 w-full max-w-sm p-6 shadow-2xl sm:p-7">
+    <div className="glass-panel relative z-10 w-full max-w-sm p-6 sm:p-8">
       <div className="mb-6 flex flex-col items-center text-center">
         {!logoFailed && (
           <img
@@ -146,14 +146,14 @@ export function LoginScreen({
             alt="Company logo"
             referrerPolicy="no-referrer"
             onError={() => setLogoFailed(true)}
-            className="mb-3 max-h-[48px] w-auto object-contain"
+            className="mb-3 h-[28px] sm:h-[32px] w-auto object-contain"
           />
         )}
-        <h1 className="text-xl font-bold tracking-tight text-[#1F3A8A]">
+        <h1 className="text-[17px] font-semibold tracking-[-0.01em] text-[#1d1d1f]">
           Testing Report
         </h1>
         {isOverlay && (
-          <p className="mt-1 text-xs text-gray-600">
+          <p className="mt-1.5 text-[12px] leading-relaxed text-[#525257]">
             Your session expired. Sign in to continue without losing your work.
           </p>
         )}
@@ -171,10 +171,10 @@ export function LoginScreen({
           autoComplete={DISABLE_EMAIL_SUGGEST ? 'off' : undefined}
           className="space-y-4"
         >
-          <div>
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="login-email"
-              className="mb-1.5 block text-sm font-medium text-gray-700"
+              className="px-1 text-[11px] font-medium uppercase tracking-[0.04em] text-[#86868b]"
             >
               Email
             </label>
@@ -192,26 +192,26 @@ export function LoginScreen({
               placeholder="Enter your email"
               autoFocus
               disabled={loading}
-              className="block w-full min-h-[46px] rounded-xl border border-gray-300/90 bg-white/90 px-3.5 py-2.5 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#1F3A8A] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1F3A8A]/20 disabled:bg-gray-50"
+              className="glass-input h-11 w-full px-3.5 text-[16px] sm:text-[13px] placeholder:text-[#86868b] disabled:opacity-60"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full min-h-[46px] items-center justify-center gap-2 rounded-xl bg-[#1F3A8A] px-4 py-2.5 text-base font-medium text-white shadow-xs transition-colors hover:bg-[#193073] active:bg-[#152861] disabled:cursor-not-allowed disabled:opacity-60"
+            className="glass-btn-primary flex h-10 w-full items-center justify-center gap-2 px-5 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading && (
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             )}
             <span>{loading ? 'Sending...' : 'Send code'}</span>
           </button>
         </form>
       ) : (
         <form onSubmit={handleVerifyCode} className="space-y-4">
-          <p className="text-center text-sm text-gray-700 leading-relaxed break-words">
+          <p className="text-center text-[13px] text-[#525257] leading-relaxed break-words">
             We sent a 6-digit code to{' '}
-            <span className="font-semibold text-gray-900">{email}</span>
+            <span className="font-semibold text-[#1d1d1f]">{email}</span>
           </p>
 
           {/* 6 digit boxes driven by ONE real text input stretched over them */}
@@ -226,12 +226,12 @@ export function LoginScreen({
                 return (
                   <div
                     key={idx}
-                    className={`flex h-13 items-center justify-center rounded-xl border bg-white/95 text-xl font-bold text-gray-900 tabular-nums transition-all ${
+                    className={`flex h-12 items-center justify-center rounded-[12px] border text-[18px] font-semibold text-[#1d1d1f] font-mono-num transition-all ${
                       isActive
-                        ? 'border-[#1F3A8A] ring-2 ring-[#1F3A8A]/25'
+                        ? 'border-[#00227A] bg-white/[0.94] shadow-[0_0_0_3px_rgba(0,34,122,0.14)]'
                         : digit
-                          ? 'border-[#1F3A8A]/50'
-                          : 'border-gray-300'
+                          ? 'border-[#00227A]/45 bg-white/80'
+                          : 'border-black/[0.08] bg-white/65'
                     }`}
                   >
                     {digit}
@@ -256,27 +256,27 @@ export function LoginScreen({
             />
           </div>
 
-          <p className="text-center text-xs font-medium text-gray-600 tabular-nums">
+          <p className="text-center text-[12px] font-medium text-[#86868b] font-mono-num">
             Code valid for {formatCountdown(validSeconds)}
           </p>
 
           <button
             type="submit"
             disabled={loading || code.length !== 6}
-            className="flex w-full min-h-[46px] items-center justify-center gap-2 rounded-xl bg-[#1F3A8A] px-4 py-2.5 text-base font-medium text-white shadow-xs transition-colors hover:bg-[#193073] active:bg-[#152861] disabled:cursor-not-allowed disabled:opacity-50"
+            className="glass-btn-primary flex h-10 w-full items-center justify-center gap-2 px-5 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading && (
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             )}
             <span>{loading ? 'Logging in...' : 'Log in'}</span>
           </button>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[13px]">
             <button
               type="button"
               onClick={handleResendCode}
               disabled={resendCooldown > 0 || resending || loading}
-              className="min-h-[36px] font-medium text-[#1F3A8A] hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline tabular-nums"
+              className="min-h-[36px] font-medium text-[#00227A] hover:text-[#0a35a3] hover:underline underline-offset-2 transition-colors disabled:cursor-not-allowed disabled:text-[#86868b] disabled:no-underline font-mono-num"
             >
               {resending
                 ? 'Sending...'
@@ -289,7 +289,7 @@ export function LoginScreen({
               type="button"
               onClick={handleUseAnotherEmail}
               disabled={loading || resending}
-              className="min-h-[36px] font-medium text-gray-600 hover:text-gray-900 hover:underline disabled:opacity-50"
+              className="min-h-[36px] font-medium text-[#525257] hover:text-[#1d1d1f] hover:underline underline-offset-2 transition-colors disabled:opacity-50"
             >
               Use another email
             </button>
@@ -302,7 +302,7 @@ export function LoginScreen({
   if (isOverlay) {
     return (
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-md"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
         role="dialog"
         aria-modal="true"
         aria-label="Session expired login"
@@ -313,22 +313,12 @@ export function LoginScreen({
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-between overflow-hidden bg-slate-200 px-4 py-8">
-      {/* Softly blurred background */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 overflow-hidden"
-      >
-        <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[#1F3A8A]/25 blur-3xl" />
-        <div className="absolute -bottom-28 -right-20 h-[28rem] w-[28rem] rounded-full bg-sky-400/25 blur-3xl" />
-        <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-300/25 blur-3xl" />
-      </div>
-
+    <div className="relative flex min-h-dvh flex-col items-center justify-between px-4 py-8">
       <div className="flex w-full flex-1 items-center justify-center py-4">
         {card}
       </div>
 
-      <footer className="relative z-10 pt-4 text-center text-xs text-gray-500">
+      <footer className="relative z-10 py-4 text-center text-[12px] text-[#86868b]">
         Developed by Zack Lu
       </footer>
     </div>
