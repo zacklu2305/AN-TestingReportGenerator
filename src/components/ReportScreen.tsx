@@ -10,6 +10,7 @@ import {
 import {
   DISABLE_FIELD_MEMORY,
   ENABLE_NEW_LIST,
+  ENABLE_PER_TIME_ZERO,
   apiBuildReport,
   apiGetReport,
   apiSaveResults,
@@ -19,6 +20,7 @@ import {
 import type {
   AppMeta,
   BlockMeta,
+  LabRowReading,
   LabTableData,
   PhotoItem,
   ReportSuggest,
@@ -29,6 +31,10 @@ import { PhotoThumbnailQueue } from '../utils/photoQueue';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ErrorBanner } from './ErrorBanner';
 import { LabTable, parseLabNumber } from './LabTable';
+import {
+  PerTimeZeroLabTable,
+  isPerTimeZeroBlock,
+} from './PerTimeZeroLabTable';
 import { PhotoSlotArea } from './PhotoSlotArea';
 
 interface ReportScreenProps {
@@ -159,20 +165,28 @@ function generateDefaultTimes(
   return list;
 }
 
-function createEmptyLabTable(times: number[]): LabTableData {
+function createEmptyLabTable(
+  times: number[],
+  perTimeZero = false
+): LabTableData {
   return {
     times: [...times],
     base: { L: '', a: '', b: '' },
-    rows: times.map(() => ({ L: '', a: '', b: '' })),
+    rows: times.map(() =>
+      perTimeZero
+        ? { L: '', a: '', b: '', base: { L: '', a: '', b: '' } }
+        : { L: '', a: '', b: '' }
+    ),
   };
 }
 
 function normalizeLabTable(
   saved: LabTableData | undefined,
-  fallbackTimes: number[]
+  fallbackTimes: number[],
+  perTimeZero = false
 ): LabTableData {
   if (!saved || !Array.isArray(saved.times)) {
-    return createEmptyLabTable(fallbackTimes);
+    return createEmptyLabTable(fallbackTimes, perTimeZero);
   }
   const times = saved.times
     .map((t) => Number(t))
@@ -182,21 +196,41 @@ function normalizeLabTable(
     a: saved.base?.a != null ? String(saved.base.a) : '',
     b: saved.base?.b != null ? String(saved.base.b) : '',
   };
-  const rows = times.map((_, idx) => {
+  const rows: LabRowReading[] = times.map((_, idx) => {
     const r = saved.rows?.[idx];
-    return {
+    const baseFields = {
       L: r?.L != null ? String(r.L) : '',
       a: r?.a != null ? String(r.a) : '',
       b: r?.b != null ? String(r.b) : '',
     };
+    if (!perTimeZero) {
+      return baseFields;
+    }
+    const savedRowBase =
+      r && r.base && typeof r.base === 'object'
+        ? {
+            L: r.base.L != null ? String(r.base.L) : '',
+            a: r.base.a != null ? String(r.base.a) : '',
+            b: r.base.b != null ? String(r.base.b) : '',
+          }
+        : { L: base.L, a: base.a, b: base.b };
+    return {
+      ...baseFields,
+      base: savedRowBase,
+    };
   });
-  return { times, base, rows };
+  const effectiveBase =
+    perTimeZero && rows[0]?.base ? { ...rows[0].base } : base;
+  return { times, base: effectiveBase, rows };
 }
 
 function isTableEmpty(table: LabTableData | undefined): boolean {
   if (!table) return true;
   if (table.base.L || table.base.a || table.base.b) return false;
-  return table.rows.every((r) => !r.L && !r.a && !r.b);
+  return table.rows.every(
+    (r) =>
+      !r.L && !r.a && !r.b && !r.base?.L && !r.base?.a && !r.base?.b
+  );
 }
 
 function formatCurrentTime(): string {
@@ -359,7 +393,12 @@ export function ReportScreen({
           if (!block?.table) continue;
           const savedTable = savedResults?.tables?.[key];
           const defaultTimes = generateDefaultTimes(block, nextValues);
-          nextTables[key] = normalizeLabTable(savedTable, defaultTimes);
+          const usePerTimeZero = ENABLE_PER_TIME_ZERO && isPerTimeZeroBlock(key);
+          nextTables[key] = normalizeLabTable(
+            savedTable,
+            defaultTimes,
+            usePerTimeZero
+          );
           if (savedTable && Array.isArray(savedTable.times)) {
             nextCustom.add(key);
           }
@@ -416,7 +455,10 @@ export function ReportScreen({
               if (!isTableEmpty(prevTables[key])) continue;
 
               const newTimes = generateDefaultTimes(block, nextValues);
-              nextTables[key] = createEmptyLabTable(newTimes);
+              nextTables[key] = createEmptyLabTable(
+                newTimes,
+                ENABLE_PER_TIME_ZERO && isPerTimeZeroBlock(key)
+              );
               changed = true;
             }
             return changed ? nextTables : prevTables;
@@ -466,7 +508,10 @@ export function ReportScreen({
       const defaultTimes = generateDefaultTimes(meta.blocks[blockKey], values);
       setTables((prev) => ({
         ...prev,
-        [blockKey]: createEmptyLabTable(defaultTimes),
+        [blockKey]: createEmptyLabTable(
+          defaultTimes,
+          ENABLE_PER_TIME_ZERO && isPerTimeZeroBlock(blockKey)
+        ),
       }));
     }
     setIsDirty(true);
@@ -489,7 +534,10 @@ export function ReportScreen({
       const defaultTimes = generateDefaultTimes(meta.blocks[xrKey], values);
       setTables((prev) => ({
         ...prev,
-        [xrKey]: createEmptyLabTable(defaultTimes),
+        [xrKey]: createEmptyLabTable(
+          defaultTimes,
+          ENABLE_PER_TIME_ZERO && isPerTimeZeroBlock(xrKey)
+        ),
       }));
     }
     setIsDirty(true);
@@ -517,16 +565,46 @@ export function ReportScreen({
     for (const key of orderedBlocks) {
       const block = meta.blocks[key];
       if (!block?.table) continue;
-      const t = tables[key] ?? createEmptyLabTable(generateDefaultTimes(block, values));
-      outTables[key] = {
-        times: [...t.times],
-        base: { L: t.base.L, a: t.base.a, b: t.base.b },
-        rows: t.times.map((_, idx) => ({
-          L: t.rows[idx]?.L ?? '',
-          a: t.rows[idx]?.a ?? '',
-          b: t.rows[idx]?.b ?? '',
-        })),
-      };
+      const usePerTimeZero = ENABLE_PER_TIME_ZERO && isPerTimeZeroBlock(key);
+      const t =
+        tables[key] ??
+        createEmptyLabTable(generateDefaultTimes(block, values), usePerTimeZero);
+      if (usePerTimeZero) {
+        const outRows = t.times.map((_, idx) => {
+          const r = t.rows[idx];
+          const rowBase = r?.base
+            ? {
+                L: r.base.L ?? '',
+                a: r.base.a ?? '',
+                b: r.base.b ?? '',
+              }
+            : { L: '', a: '', b: '' };
+          return {
+            L: r?.L ?? '',
+            a: r?.a ?? '',
+            b: r?.b ?? '',
+            base: rowBase,
+          };
+        });
+        const firstBase = outRows[0]?.base
+          ? { ...outRows[0].base }
+          : { L: t.base.L, a: t.base.a, b: t.base.b };
+        outTables[key] = {
+          times: [...t.times],
+          base: firstBase,
+          rows: outRows,
+        };
+      } else {
+        outTables[key] = {
+          times: [...t.times],
+          base: { L: t.base.L, a: t.base.a, b: t.base.b },
+          rows: t.times.map((_, idx) => ({
+            L: t.rows[idx]?.L ?? '',
+            a: t.rows[idx]?.a ?? '',
+            b: t.rows[idx]?.b ?? '',
+          })),
+        };
+      }
     }
 
     return {
@@ -645,17 +723,28 @@ export function ReportScreen({
           </div>
         )}
 
-        {block.table && (
-          <LabTable
-            blockKey={blockKey}
-            tableMeta={block.table}
-            data={
-              tables[blockKey] ??
-              createEmptyLabTable(generateDefaultTimes(block, values))
-            }
-            onChange={(next) => handleTableChange(blockKey, next)}
-          />
-        )}
+        {block.table &&
+          (ENABLE_PER_TIME_ZERO && isPerTimeZeroBlock(blockKey) ? (
+            <PerTimeZeroLabTable
+              blockKey={blockKey}
+              tableMeta={block.table}
+              data={
+                tables[blockKey] ??
+                createEmptyLabTable(generateDefaultTimes(block, values), true)
+              }
+              onChange={(next) => handleTableChange(blockKey, next)}
+            />
+          ) : (
+            <LabTable
+              blockKey={blockKey}
+              tableMeta={block.table}
+              data={
+                tables[blockKey] ??
+                createEmptyLabTable(generateDefaultTimes(block, values))
+              }
+              onChange={(next) => handleTableChange(blockKey, next)}
+            />
+          ))}
 
         {block.slot && (
           <PhotoSlotArea

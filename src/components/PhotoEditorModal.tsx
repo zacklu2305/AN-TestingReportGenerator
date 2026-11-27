@@ -17,6 +17,8 @@ import {
 import {
   DISABLE_FIELD_MEMORY,
   ENABLE_ANNOTATIONS,
+  ENABLE_BRIGHTNESS,
+  ENABLE_FREE_CROP,
   getForgetfulInputAttrs,
 } from '../api';
 import type {
@@ -56,6 +58,23 @@ type CropDragMode =
   | {
       type: 'handle';
       corner: 'nw' | 'ne' | 'sw' | 'se';
+      orig: CropRect;
+    };
+
+type FreeCropHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
+
+type FreeCropDragMode =
+  | {
+      type: 'move';
+      startX: number;
+      startY: number;
+      orig: CropRect;
+    }
+  | {
+      type: 'handle';
+      handle: FreeCropHandle;
+      startX: number;
+      startY: number;
       orig: CropRect;
     };
 
@@ -152,6 +171,7 @@ export function PhotoEditorModal({
   const [pendingClearAction, setPendingClearAction] =
     useState<PendingClearAction | null>(null);
 
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const textInputRef = useRef<HTMLInputElement | null>(null);
@@ -161,7 +181,13 @@ export function PhotoEditorModal({
     width: 1,
     height: 1,
   });
+  const [previewDims, setPreviewDims] = useState<{ width: number; height: number }>({
+    width: 1,
+    height: 1,
+  });
+  const [fittedBox, setFittedBox] = useState<{ w: number; h: number } | null>(null);
   const cropDragRef = useRef<CropDragMode | null>(null);
+  const freeCropDragRef = useRef<FreeCropDragMode | null>(null);
   const annDragRef = useRef<AnnotateDragMode | null>(null);
   const rafRef = useRef<number | null>(null);
 
@@ -191,6 +217,11 @@ export function PhotoEditorModal({
     }
   }, [pendingText !== null]);
 
+  const annotateCropX = activeMode === 'annotate' ? params.crop.x : 0;
+  const annotateCropY = activeMode === 'annotate' ? params.crop.y : 0;
+  const annotateCropW = activeMode === 'annotate' ? params.crop.w : 1;
+  const annotateCropH = activeMode === 'annotate' ? params.crop.h : 1;
+
   // Rebuild base preview ImageData whenever sourceImage, rotation, mode, or crop (in annotate mode) changes
   useEffect(() => {
     if (!open || !sourceImage) return;
@@ -200,10 +231,10 @@ export function PhotoEditorModal({
     if (activeMode === 'annotate') {
       const rotW = rotated.width;
       const rotH = rotated.height;
-      const cx = Math.round(params.crop.x * rotW);
-      const cy = Math.round(params.crop.y * rotH);
-      const cw = Math.max(1, Math.round(params.crop.w * rotW));
-      const ch = Math.max(1, Math.round(params.crop.h * rotH));
+      const cx = Math.round(annotateCropX * rotW);
+      const cy = Math.round(annotateCropY * rotH);
+      const cw = Math.max(1, Math.round(annotateCropW * rotW));
+      const ch = Math.max(1, Math.round(annotateCropH * rotH));
 
       const croppedCanvas = document.createElement('canvas');
       croppedCanvas.width = cw;
@@ -214,22 +245,30 @@ export function PhotoEditorModal({
 
       basePreviewRef.current = cctx.getImageData(0, 0, cw, ch);
       previewDimsRef.current = { width: cw, height: ch };
+      setPreviewDims((prev) =>
+        prev.width === cw && prev.height === ch ? prev : { width: cw, height: ch }
+      );
 
       const displayCanvas = canvasRef.current;
-      if (displayCanvas) {
+      if (displayCanvas && (displayCanvas.width !== cw || displayCanvas.height !== ch)) {
         displayCanvas.width = cw;
         displayCanvas.height = ch;
       }
     } else {
       const ctx = rotated.getContext('2d');
       if (!ctx) return;
-      basePreviewRef.current = ctx.getImageData(0, 0, rotated.width, rotated.height);
-      previewDimsRef.current = { width: rotated.width, height: rotated.height };
+      const rw = rotated.width;
+      const rh = rotated.height;
+      basePreviewRef.current = ctx.getImageData(0, 0, rw, rh);
+      previewDimsRef.current = { width: rw, height: rh };
+      setPreviewDims((prev) =>
+        prev.width === rw && prev.height === rh ? prev : { width: rw, height: rh }
+      );
 
       const displayCanvas = canvasRef.current;
-      if (displayCanvas) {
-        displayCanvas.width = rotated.width;
-        displayCanvas.height = rotated.height;
+      if (displayCanvas && (displayCanvas.width !== rw || displayCanvas.height !== rh)) {
+        displayCanvas.width = rw;
+        displayCanvas.height = rh;
       }
     }
   }, [
@@ -237,13 +276,57 @@ export function PhotoEditorModal({
     sourceImage,
     params.rotate,
     activeMode,
-    params.crop.x,
-    params.crop.y,
-    params.crop.w,
-    params.crop.h,
+    annotateCropX,
+    annotateCropY,
+    annotateCropW,
+    annotateCropH,
   ]);
 
-  // Live preview of temperature, sharpness, and annotations (drawn LAST)
+  // Fit preview canvas pixel-for-pixel inside stage while leaving room for 44x44px crop handles
+  useEffect(() => {
+    if (!open || !sourceImage || !ENABLE_FREE_CROP) return;
+    const stageEl = stageRef.current;
+    if (!stageEl) return;
+
+    const recompute = () => {
+      const rect = stageEl.getBoundingClientRect();
+      const pad = activeMode === 'adjust' ? 48 : 24;
+      const availW = Math.max(80, rect.width - pad);
+      const availH = Math.max(80, rect.height - pad);
+      const imgAspect = previewDims.width / Math.max(1, previewDims.height);
+      const boxAspect = availW / availH;
+
+      let fitW: number;
+      let fitH: number;
+      if (imgAspect > boxAspect) {
+        fitW = availW;
+        fitH = availW / imgAspect;
+      } else {
+        fitH = availH;
+        fitW = availH * imgAspect;
+      }
+      setFittedBox({
+        w: Math.max(60, Math.floor(fitW)),
+        h: Math.max(60, Math.floor(fitH)),
+      });
+    };
+
+    recompute();
+    const ro = new ResizeObserver(recompute);
+    ro.observe(stageEl);
+    window.addEventListener('resize', recompute);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', recompute);
+    };
+  }, [open, sourceImage, activeMode, previewDims.width, previewDims.height]);
+
+  const cropKeyForPreview =
+    hasAnnotations || activeMode === 'annotate'
+      ? `${params.crop.x},${params.crop.y},${params.crop.w},${params.crop.h}`
+      : '';
+
+  // Live preview of brightness, temperature, sharpness, and annotations (drawn LAST)
   useEffect(() => {
     if (!open || !sourceImage) return;
 
@@ -270,8 +353,14 @@ export function PhotoEditorModal({
         baseData.width,
         baseData.height
       );
-      if (params.temperature !== 0 || params.sharpness > 0) {
-        applyTemperatureAndSharpness(copy, params.temperature, params.sharpness);
+      const brightnessVal = ENABLE_BRIGHTNESS ? (params.brightness ?? 0) : 0;
+      if (brightnessVal !== 0 || params.temperature !== 0 || params.sharpness > 0) {
+        applyTemperatureAndSharpness(
+          copy,
+          params.temperature,
+          params.sharpness,
+          brightnessVal
+        );
       }
       ctx.putImageData(copy, 0, 0);
 
@@ -329,9 +418,10 @@ export function PhotoEditorModal({
     sourceImage,
     activeMode,
     params.rotate,
+    params.brightness,
     params.temperature,
     params.sharpness,
-    params.crop,
+    cropKeyForPreview,
     annotations,
     selectedIndex,
     draftArrow,
@@ -349,6 +439,9 @@ export function PhotoEditorModal({
     params.crop.y > 0.002 ||
     params.crop.w < 0.998 ||
     params.crop.h < 0.998;
+  const currentBrightness = params.brightness ?? 0;
+  const canReset =
+    isCropped || (ENABLE_BRIGHTNESS && currentBrightness !== 0);
 
   const selectedAnn =
     selectedIndex !== null && selectedIndex >= 0 && selectedIndex < annotations.length
@@ -535,6 +628,127 @@ export function PhotoEditorModal({
       }
       cropDragRef.current = null;
     }
+  }
+
+  // --- FREE CROP (8 HANDLES, POINTER CAPTURE, MIN 60PX) ---
+  function getUnclampedRelativePoint(e: ReactPointerEvent<HTMLElement>) {
+    const el = overlayRef.current;
+    if (!el) return { x: 0, y: 0, width: 1, height: 1 };
+    const rect = el.getBoundingClientRect();
+    const width = Math.max(1, rect.width);
+    const height = Math.max(1, rect.height);
+    return {
+      x: (e.clientX - rect.left) / width,
+      y: (e.clientY - rect.top) / height,
+      width,
+      height,
+    };
+  }
+
+  function handleFreeCropHandleDown(
+    handle: FreeCropHandle,
+    e: ReactPointerEvent<HTMLDivElement>
+  ) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (hasAnnotations) {
+      setPendingClearAction({ kind: 'start-crop' });
+      return;
+    }
+    const pt = getUnclampedRelativePoint(e);
+    try {
+      overlayRef.current?.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    freeCropDragRef.current = {
+      type: 'handle',
+      handle,
+      startX: pt.x,
+      startY: pt.y,
+      orig: { ...params.crop },
+    };
+  }
+
+  function handleFreeCropBoxDown(e: ReactPointerEvent<HTMLDivElement>) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (hasAnnotations) {
+      setPendingClearAction({ kind: 'start-crop' });
+      return;
+    }
+    const pt = getUnclampedRelativePoint(e);
+    try {
+      overlayRef.current?.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    freeCropDragRef.current = {
+      type: 'move',
+      startX: pt.x,
+      startY: pt.y,
+      orig: { ...params.crop },
+    };
+  }
+
+  function handleFreeCropPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
+    const drag = freeCropDragRef.current;
+    if (!drag) return;
+    e.preventDefault();
+    const pt = getUnclampedRelativePoint(e);
+    const dx = pt.x - drag.startX;
+    const dy = pt.y - drag.startY;
+
+    if (drag.type === 'move') {
+      const nextX = Math.max(0, Math.min(1 - drag.orig.w, drag.orig.x + dx));
+      const nextY = Math.max(0, Math.min(1 - drag.orig.h, drag.orig.y + dy));
+      setParams((prev) => ({
+        ...prev,
+        crop: { ...drag.orig, x: nextX, y: nextY },
+      }));
+      return;
+    }
+
+    const minFracW = Math.max(0.05, Math.min(1, 60 / Math.max(60, pt.width)));
+    const minFracH = Math.max(0.05, Math.min(1, 60 / Math.max(60, pt.height)));
+    const { orig, handle } = drag;
+    let left = orig.x;
+    let top = orig.y;
+    let right = orig.x + orig.w;
+    let bottom = orig.y + orig.h;
+
+    if (handle === 'nw' || handle === 'w' || handle === 'sw') {
+      left = Math.max(0, Math.min(right - minFracW, orig.x + dx));
+    }
+    if (handle === 'ne' || handle === 'e' || handle === 'se') {
+      right = Math.min(1, Math.max(left + minFracW, orig.x + orig.w + dx));
+    }
+    if (handle === 'nw' || handle === 'n' || handle === 'ne') {
+      top = Math.max(0, Math.min(bottom - minFracH, orig.y + dy));
+    }
+    if (handle === 'sw' || handle === 's' || handle === 'se') {
+      bottom = Math.min(1, Math.max(top + minFracH, orig.y + orig.h + dy));
+    }
+
+    setParams((prev) => ({
+      ...prev,
+      crop: {
+        x: left,
+        y: top,
+        w: Math.max(minFracW, right - left),
+        h: Math.max(minFracH, bottom - top),
+      },
+    }));
+  }
+
+  function handleFreeCropPointerUp(e: ReactPointerEvent<HTMLDivElement>) {
+    if (!freeCropDragRef.current) return;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    freeCropDragRef.current = null;
   }
 
   // --- ANNOTATE MODE HIT TESTING & POINTER HANDLERS ---
@@ -971,6 +1185,7 @@ export function PhotoEditorModal({
     setParams((prev) => ({
       ...prev,
       crop: { ...DEFAULT_CROP },
+      ...(ENABLE_BRIGHTNESS ? { brightness: 0 } : {}),
       ...(clearAnns ? { annotations: [] } : {}),
     }));
     if (clearAnns) {
@@ -988,7 +1203,7 @@ export function PhotoEditorModal({
   }
 
   function handleResetCrop() {
-    if (hasAnnotations) {
+    if (hasAnnotations && isCropped) {
       setPendingClearAction({ kind: 'reset-crop' });
       return;
     }
@@ -1103,80 +1318,221 @@ export function PhotoEditorModal({
       </div>
 
       {/* Canvas preview area */}
-      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-gray-950 p-3 sm:p-5">
-        <div className="relative inline-flex max-h-full max-w-full items-center justify-center select-none">
+      <div
+        ref={stageRef}
+        className={`relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-gray-950 ${
+          ENABLE_BRIGHTNESS ? 'min-h-[40dvh]' : ''
+        } ${ENABLE_FREE_CROP ? 'p-4 sm:p-6' : 'p-3 sm:p-5'}`}
+      >
+        <div
+          className="relative inline-flex max-h-full max-w-full items-center justify-center select-none"
+          style={
+            ENABLE_FREE_CROP && fittedBox
+              ? { width: `${fittedBox.w}px`, height: `${fittedBox.h}px` }
+              : undefined
+          }
+        >
           <canvas
             ref={canvasRef}
-            className="block max-h-[48dvh] max-w-full rounded object-contain sm:max-h-[56dvh]"
+            className={
+              ENABLE_FREE_CROP
+                ? 'block h-full w-full rounded'
+                : 'block max-h-[48dvh] max-w-full rounded object-contain sm:max-h-[56dvh]'
+            }
           />
 
           {/* Interactive overlay aligned strictly to canvas bounds */}
           {activeMode === 'adjust' ? (
-            <div
-              ref={overlayRef}
-              onPointerDown={handleAdjustPointerDown}
-              onPointerMove={handleAdjustPointerMove}
-              onPointerUp={handleAdjustPointerUp}
-              onPointerCancel={handleAdjustPointerUp}
-              className="absolute inset-0 cursor-crosshair touch-none"
-            >
-              {isCropped && (
-                <>
-                  <div
-                    className="pointer-events-none absolute left-0 right-0 top-0 bg-black/55"
-                    style={{ height: `${params.crop.y * 100}%` }}
-                  />
-                  <div
-                    className="pointer-events-none absolute left-0 right-0 bottom-0 bg-black/55"
-                    style={{
-                      height: `${Math.max(0, (1 - params.crop.y - params.crop.h) * 100)}%`,
-                    }}
-                  />
-                  <div
-                    className="pointer-events-none absolute left-0 bg-black/55"
-                    style={{
-                      top: `${params.crop.y * 100}%`,
-                      height: `${params.crop.h * 100}%`,
-                      width: `${params.crop.x * 100}%`,
-                    }}
-                  />
-                  <div
-                    className="pointer-events-none absolute right-0 bg-black/55"
-                    style={{
-                      top: `${params.crop.y * 100}%`,
-                      height: `${params.crop.h * 100}%`,
-                      width: `${Math.max(0, (1 - params.crop.x - params.crop.w) * 100)}%`,
-                    }}
-                  />
-                </>
-              )}
-
+            ENABLE_FREE_CROP ? (
               <div
-                className={`pointer-events-none absolute border-2 ${
-                  isCropped ? 'border-white' : 'border-white/50 border-dashed'
-                }`}
-                style={{
-                  left: `${params.crop.x * 100}%`,
-                  top: `${params.crop.y * 100}%`,
-                  width: `${params.crop.w * 100}%`,
-                  height: `${params.crop.h * 100}%`,
-                }}
+                ref={overlayRef}
+                onPointerMove={handleFreeCropPointerMove}
+                onPointerUp={handleFreeCropPointerUp}
+                onPointerCancel={handleFreeCropPointerUp}
+                className="absolute inset-0 touch-none select-none"
               >
+                {/* Outside crop frame dimmed with 55% black */}
                 {isCropped && (
                   <>
-                    <div className="absolute left-1/3 top-0 bottom-0 w-px bg-white/35" />
-                    <div className="absolute left-2/3 top-0 bottom-0 w-px bg-white/35" />
-                    <div className="absolute top-1/3 left-0 right-0 h-px bg-white/35" />
-                    <div className="absolute top-2/3 left-0 right-0 h-px bg-white/35" />
+                    <div
+                      className="pointer-events-none absolute left-0 right-0 top-0 bg-black/55"
+                      style={{ height: `${params.crop.y * 100}%` }}
+                    />
+                    <div
+                      className="pointer-events-none absolute left-0 right-0 bottom-0 bg-black/55"
+                      style={{
+                        height: `${Math.max(0, (1 - params.crop.y - params.crop.h) * 100)}%`,
+                      }}
+                    />
+                    <div
+                      className="pointer-events-none absolute left-0 bg-black/55"
+                      style={{
+                        top: `${params.crop.y * 100}%`,
+                        height: `${params.crop.h * 100}%`,
+                        width: `${params.crop.x * 100}%`,
+                      }}
+                    />
+                    <div
+                      className="pointer-events-none absolute right-0 bg-black/55"
+                      style={{
+                        top: `${params.crop.y * 100}%`,
+                        height: `${params.crop.h * 100}%`,
+                        width: `${Math.max(0, (1 - params.crop.x - params.crop.w) * 100)}%`,
+                      }}
+                    />
                   </>
                 )}
 
-                <span className="absolute -left-1.5 -top-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
-                <span className="absolute -right-1.5 -top-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
-                <span className="absolute -left-1.5 -bottom-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
-                <span className="absolute -right-1.5 -bottom-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
+                {/* Draggable crop frame */}
+                <div
+                  onPointerDown={handleFreeCropBoxDown}
+                  className={`absolute border-2 cursor-move touch-none ${
+                    isCropped ? 'border-white' : 'border-white/75 border-dashed'
+                  }`}
+                  style={{
+                    left: `${params.crop.x * 100}%`,
+                    top: `${params.crop.y * 100}%`,
+                    width: `${params.crop.w * 100}%`,
+                    height: `${params.crop.h * 100}%`,
+                  }}
+                >
+                  {isCropped && (
+                    <>
+                      <div className="pointer-events-none absolute left-1/3 top-0 bottom-0 w-px bg-white/35" />
+                      <div className="pointer-events-none absolute left-2/3 top-0 bottom-0 w-px bg-white/35" />
+                      <div className="pointer-events-none absolute top-1/3 left-0 right-0 h-px bg-white/35" />
+                      <div className="pointer-events-none absolute top-2/3 left-0 right-0 h-px bg-white/35" />
+                    </>
+                  )}
+
+                  {/* 4 Corner Handles (44x44px invisible touch areas, navy #1F3A8A squares with white border) */}
+                  <div
+                    onPointerDown={(e) => handleFreeCropHandleDown('nw', e)}
+                    aria-label="Resize top-left corner"
+                    className="absolute left-0 top-0 z-10 flex h-[44px] w-[44px] -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize items-center justify-center touch-none"
+                  >
+                    <span className="pointer-events-none h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                  </div>
+                  <div
+                    onPointerDown={(e) => handleFreeCropHandleDown('ne', e)}
+                    aria-label="Resize top-right corner"
+                    className="absolute right-0 top-0 z-10 flex h-[44px] w-[44px] translate-x-1/2 -translate-y-1/2 cursor-nesw-resize items-center justify-center touch-none"
+                  >
+                    <span className="pointer-events-none h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                  </div>
+                  <div
+                    onPointerDown={(e) => handleFreeCropHandleDown('sw', e)}
+                    aria-label="Resize bottom-left corner"
+                    className="absolute left-0 bottom-0 z-10 flex h-[44px] w-[44px] -translate-x-1/2 translate-y-1/2 cursor-nesw-resize items-center justify-center touch-none"
+                  >
+                    <span className="pointer-events-none h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                  </div>
+                  <div
+                    onPointerDown={(e) => handleFreeCropHandleDown('se', e)}
+                    aria-label="Resize bottom-right corner"
+                    className="absolute right-0 bottom-0 z-10 flex h-[44px] w-[44px] translate-x-1/2 translate-y-1/2 cursor-nwse-resize items-center justify-center touch-none"
+                  >
+                    <span className="pointer-events-none h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                  </div>
+
+                  {/* 4 Edge Middle Handles (44x44px invisible touch areas, navy #1F3A8A squares with white border) */}
+                  <div
+                    onPointerDown={(e) => handleFreeCropHandleDown('n', e)}
+                    aria-label="Resize top edge"
+                    className="absolute left-1/2 top-0 z-10 flex h-[44px] w-[44px] -translate-x-1/2 -translate-y-1/2 cursor-ns-resize items-center justify-center touch-none"
+                  >
+                    <span className="pointer-events-none h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                  </div>
+                  <div
+                    onPointerDown={(e) => handleFreeCropHandleDown('s', e)}
+                    aria-label="Resize bottom edge"
+                    className="absolute left-1/2 bottom-0 z-10 flex h-[44px] w-[44px] -translate-x-1/2 translate-y-1/2 cursor-ns-resize items-center justify-center touch-none"
+                  >
+                    <span className="pointer-events-none h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                  </div>
+                  <div
+                    onPointerDown={(e) => handleFreeCropHandleDown('w', e)}
+                    aria-label="Resize left edge"
+                    className="absolute left-0 top-1/2 z-10 flex h-[44px] w-[44px] -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center touch-none"
+                  >
+                    <span className="pointer-events-none h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                  </div>
+                  <div
+                    onPointerDown={(e) => handleFreeCropHandleDown('e', e)}
+                    aria-label="Resize right edge"
+                    className="absolute right-0 top-1/2 z-10 flex h-[44px] w-[44px] translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center touch-none"
+                  >
+                    <span className="pointer-events-none h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#1F3A8A] shadow-sm" />
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div
+                ref={overlayRef}
+                onPointerDown={handleAdjustPointerDown}
+                onPointerMove={handleAdjustPointerMove}
+                onPointerUp={handleAdjustPointerUp}
+                onPointerCancel={handleAdjustPointerUp}
+                className="absolute inset-0 cursor-crosshair touch-none"
+              >
+                {isCropped && (
+                  <>
+                    <div
+                      className="pointer-events-none absolute left-0 right-0 top-0 bg-black/55"
+                      style={{ height: `${params.crop.y * 100}%` }}
+                    />
+                    <div
+                      className="pointer-events-none absolute left-0 right-0 bottom-0 bg-black/55"
+                      style={{
+                        height: `${Math.max(0, (1 - params.crop.y - params.crop.h) * 100)}%`,
+                      }}
+                    />
+                    <div
+                      className="pointer-events-none absolute left-0 bg-black/55"
+                      style={{
+                        top: `${params.crop.y * 100}%`,
+                        height: `${params.crop.h * 100}%`,
+                        width: `${params.crop.x * 100}%`,
+                      }}
+                    />
+                    <div
+                      className="pointer-events-none absolute right-0 bg-black/55"
+                      style={{
+                        top: `${params.crop.y * 100}%`,
+                        height: `${params.crop.h * 100}%`,
+                        width: `${Math.max(0, (1 - params.crop.x - params.crop.w) * 100)}%`,
+                      }}
+                    />
+                  </>
+                )}
+
+                <div
+                  className={`pointer-events-none absolute border-2 ${
+                    isCropped ? 'border-white' : 'border-white/50 border-dashed'
+                  }`}
+                  style={{
+                    left: `${params.crop.x * 100}%`,
+                    top: `${params.crop.y * 100}%`,
+                    width: `${params.crop.w * 100}%`,
+                    height: `${params.crop.h * 100}%`,
+                  }}
+                >
+                  {isCropped && (
+                    <>
+                      <div className="absolute left-1/3 top-0 bottom-0 w-px bg-white/35" />
+                      <div className="absolute left-2/3 top-0 bottom-0 w-px bg-white/35" />
+                      <div className="absolute top-1/3 left-0 right-0 h-px bg-white/35" />
+                      <div className="absolute top-2/3 left-0 right-0 h-px bg-white/35" />
+                    </>
+                  )}
+
+                  <span className="absolute -left-1.5 -top-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
+                  <span className="absolute -right-1.5 -top-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
+                  <span className="absolute -left-1.5 -bottom-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
+                  <span className="absolute -right-1.5 -bottom-1.5 h-3.5 w-3.5 rounded-xs border-2 border-white bg-[#00227A]" />
+                </div>
+              </div>
+            )
           ) : (
             <div
               ref={overlayRef}
@@ -1276,7 +1632,13 @@ export function PhotoEditorModal({
       </div>
 
       {/* Bottom Controls Drawer */}
-      <div className="shrink-0 border-t border-gray-800 bg-gray-900 px-4 py-3.5">
+      <div
+        className={`shrink-0 border-t border-gray-800 bg-gray-900 px-4 py-3.5 ${
+          ENABLE_BRIGHTNESS
+            ? 'max-h-[calc(60dvh-3.5rem)] overflow-y-auto overscroll-contain'
+            : ''
+        }`}
+      >
         {activeMode === 'adjust' ? (
           <div className="mx-auto max-w-xl space-y-4">
             {/* Rotate & Crop Reset buttons */}
@@ -1303,12 +1665,14 @@ export function PhotoEditorModal({
               <div className="flex items-center gap-2">
                 <span className="hidden items-center gap-1 text-xs text-gray-400 sm:inline-flex">
                   <Crop className="h-3.5 w-3.5" aria-hidden="true" />
-                  Drag image to crop
+                  {ENABLE_FREE_CROP
+                    ? 'Drag the corners to crop'
+                    : 'Drag image to crop'}
                 </span>
                 <button
                   type="button"
                   onClick={handleResetCrop}
-                  disabled={!isCropped}
+                  disabled={!canReset}
                   className="flex min-h-[42px] items-center gap-1.5 rounded-lg bg-gray-800 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-40"
                 >
                   <Undo2 className="h-4 w-4" aria-hidden="true" />
@@ -1316,6 +1680,35 @@ export function PhotoEditorModal({
                 </button>
               </div>
             </div>
+
+            {/* Brightness slider -100 to +100 */}
+            {ENABLE_BRIGHTNESS && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <label htmlFor="editor-brightness" className="font-medium text-gray-200">
+                    Brightness
+                  </label>
+                  <span className="font-medium text-gray-300 tabular-nums">
+                    {currentBrightness}
+                  </span>
+                </div>
+                <input
+                  id="editor-brightness"
+                  type="range"
+                  min={-100}
+                  max={100}
+                  step={1}
+                  value={currentBrightness}
+                  onChange={(e) =>
+                    setParams((prev) => ({
+                      ...prev,
+                      brightness: Number(e.target.value),
+                    }))
+                  }
+                  className="h-2 w-full cursor-pointer accent-blue-400"
+                />
+              </div>
+            )}
 
             {/* Sharpness slider 0 to 100 */}
             <div className="space-y-1">

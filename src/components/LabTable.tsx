@@ -1,6 +1,6 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Plus, X } from 'lucide-react';
-import { getForgetfulInputAttrs } from '../api';
+import { ENABLE_QUV_ABS_DELTA, getForgetfulInputAttrs } from '../api';
 import type { BlockTableMeta, LabReading, LabTableData } from '../types';
 
 interface LabTableProps {
@@ -65,6 +65,10 @@ function formatSigned(val: number): string {
 export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps) {
   const [newHourInput, setNewHourInput] = useState('');
   const tableKeyPrefix = blockKey ? `tbl_${blockKey}` : 'tbl';
+  const formatDelta =
+    ENABLE_QUV_ABS_DELTA && blockKey === 'QUV100'
+      ? (val: number) => Math.abs(val).toFixed(2)
+      : formatSigned;
 
   const rows: LabReading[] = data.times.map(
     (_, idx) => data.rows[idx] ?? { L: '', a: '', b: '' }
@@ -296,19 +300,19 @@ export function LabTable({ blockKey, tableMeta, data, onChange }: LabTableProps)
                       <div>
                         <span className="text-[#86868b]">dL </span>
                         <span className="font-medium text-[#1d1d1f]">
-                          {deltas ? formatSigned(deltas.dL) : '—'}
+                          {deltas ? formatDelta(deltas.dL) : '—'}
                         </span>
                       </div>
                       <div>
                         <span className="text-[#86868b]">da </span>
                         <span className="font-medium text-[#1d1d1f]">
-                          {deltas ? formatSigned(deltas.da) : '—'}
+                          {deltas ? formatDelta(deltas.da) : '—'}
                         </span>
                       </div>
                       <div>
                         <span className="text-[#86868b]">db </span>
                         <span className="font-medium text-[#1d1d1f]">
-                          {deltas ? formatSigned(deltas.db) : '—'}
+                          {deltas ? formatDelta(deltas.db) : '—'}
                         </span>
                       </div>
                       <div className="pr-0.5 text-right font-semibold text-[#00227A]">

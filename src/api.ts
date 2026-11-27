@@ -24,6 +24,10 @@ export const ENABLE_SERVER_LOGOUT = true;
 export const ENABLE_SYSTEM_PDF = true;
 export const DISABLE_FIELD_MEMORY = true;
 export const ENABLE_FORMAT_CHOICE = true;
+export const ENABLE_PER_TIME_ZERO = true;
+export const ENABLE_QUV_ABS_DELTA = true;
+export const ENABLE_FREE_CROP = true;
+export const ENABLE_BRIGHTNESS = true;
 
 export interface ForgetfulInputAttrs {
   id?: string;

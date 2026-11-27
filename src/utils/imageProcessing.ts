@@ -1,4 +1,4 @@
-import { ENABLE_ANNOTATIONS } from '../api';
+import { ENABLE_ANNOTATIONS, ENABLE_BRIGHTNESS } from '../api';
 import type {
   ArrowAnnotation,
   CropRect,
@@ -12,6 +12,7 @@ export const DEFAULT_CROP: CropRect = { x: 0, y: 0, w: 1, h: 1 };
 export const DEFAULT_PHOTO_PARAMS: PhotoParams = {
   rotate: 0,
   crop: { ...DEFAULT_CROP },
+  ...(ENABLE_BRIGHTNESS ? { brightness: 0 } : {}),
   sharpness: 0,
   temperature: 0,
   annotations: [],
@@ -94,6 +95,7 @@ export function normalizePhotoParams(
     return {
       rotate: 0,
       crop: { ...DEFAULT_CROP },
+      ...(ENABLE_BRIGHTNESS ? { brightness: 0 } : {}),
       sharpness: 0,
       temperature: 0,
       ...(ENABLE_ANNOTATIONS ? { annotations: [] } : {}),
@@ -113,6 +115,11 @@ export function normalizePhotoParams(
   const base: PhotoParams = {
     rotate: normalizeRotation(Number(parsed.rotate) || 0),
     crop: normalizeCrop(parsed.crop),
+    ...(ENABLE_BRIGHTNESS
+      ? { brightness: clamp(Number(parsed.brightness) || 0, -100, 100) }
+      : parsed.brightness !== undefined
+        ? { brightness: clamp(Number(parsed.brightness) || 0, -100, 100) }
+        : {}),
     sharpness: clamp(Number(parsed.sharpness) || 0, 0, 100),
     temperature: clamp(Number(parsed.temperature) || 0, -100, 100),
   };
@@ -399,16 +406,27 @@ export function drawAnnotationsOnCanvas(
 }
 
 /**
- * Applies temperature (warm/cool red & blue channel shift) and unsharp mask sharpness
- * directly to an ImageData buffer in place.
+ * Applies brightness (factor = 1 + value/200), temperature (warm/cool red & blue channel shift),
+ * and unsharp mask sharpness directly to an ImageData buffer in place.
  */
 export function applyTemperatureAndSharpness(
   imageData: ImageData,
   temperature: number,
-  sharpness: number
+  sharpness: number,
+  brightness = 0
 ): ImageData {
   const { data, width, height } = imageData;
   const len = data.length;
+
+  // 0. Brightness (-100 to +100): factor = 1 + value/200 (0.5 at -100, 1.5 at +100)
+  if (ENABLE_BRIGHTNESS && brightness !== 0) {
+    const factor = 1 + brightness / 200;
+    for (let i = 0; i < len; i += 4) {
+      data[i] = clamp(data[i] * factor, 0, 255);
+      data[i + 1] = clamp(data[i + 1] * factor, 0, 255);
+      data[i + 2] = clamp(data[i + 2] * factor, 0, 255);
+    }
+  }
 
   // 1. Temperature (-100 to +100): shift red and blue channels
   if (temperature !== 0) {
@@ -581,12 +599,14 @@ export function buildEditedJpegBase64(
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(rotatedCanvas, cropX, cropY, cropW, cropH, 0, 0, outW, outH);
 
-    if (normalized.temperature !== 0 || normalized.sharpness > 0) {
+    const brightness = ENABLE_BRIGHTNESS ? normalized.brightness ?? 0 : 0;
+    if (brightness !== 0 || normalized.temperature !== 0 || normalized.sharpness > 0) {
       const imageData = ctx.getImageData(0, 0, outW, outH);
       applyTemperatureAndSharpness(
         imageData,
         normalized.temperature,
-        normalized.sharpness
+        normalized.sharpness,
+        brightness
       );
       ctx.putImageData(imageData, 0, 0);
     }

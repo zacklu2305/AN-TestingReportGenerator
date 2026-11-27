@@ -34,10 +34,14 @@ export interface LabReading {
   b: string;
 }
 
+export interface LabRowReading extends LabReading {
+  base?: LabReading;
+}
+
 export interface LabTableData {
   times: number[];
   base: LabReading;
-  rows: LabReading[];
+  rows: LabRowReading[];
 }
 
 export interface SavedResults {
@@ -90,6 +94,7 @@ export type PhotoAnnotation = ArrowAnnotation | TextAnnotation;
 export interface PhotoParams {
   rotate: number; // 0 | 90 | 180 | 270
   crop: CropRect;
+  brightness?: number; // -100..100 (missing means 0)
   sharpness: number; // 0..100
   temperature: number; // -100..100
   annotations?: PhotoAnnotation[];
